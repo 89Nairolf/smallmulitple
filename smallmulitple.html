@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html>
+<script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+<script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.5.1/dist/tfjs-vis.umd.min.js"></script>
+<body>
+  <h2>Tensorflow Visor</h2>
+  <div style="display:flex">
+    <div id="plot1" style="height:200px; width: 250px; margin-top:40px"></div>
+    <div style="display: block;">
+      <div style="display: flex;">
+        <div style="width: 600px;">
+        <p id="first_p"></p>
+        <div id="plot2"></div>
+      </div>
+      <div style="width: 600px;">
+        <p id="second_p"></p>
+        <div id="plot22"></div></div>
+      </div>
+    <p id="trainingOnData"></p>
+    <p>Explanation: Here you can see ..</p>
+    <div style="width:40%">
+      <div id="plot3"></div>
+      <div id="plot4"></div>
+      <div id="plot5"></div>
+      <div id="plot6"></div>
+      <div id="plot7"></div>
+    </div>
+    <div style="width:40%">
+      <div id="plot23"></div>
+      <div id="plot24"></div>
+      <div id="plot25"></div>
+      <div id="plot26"></div>
+      <div id="plot27"></div>
+    </div>
+    </div>
+  </div>
+  <script>
+
+    document.getElementById("trainingOnData").innerText = "One Moment please. The Network is Training";
+    const plot = document.getElementById("plot1");
+    const surface2 = document.getElementById("plot2");
+    const surface3 = document.getElementById("plot3");
+    const surface4 = document.getElementById("plot4");
+    const surface5 = document.getElementById("plot5");
+    const surface6 = document.getElementById("plot6");
+    const surface7 = document.getElementById("plot7");
+
+
+    const surface22 = document.getElementById("plot22");
+    const surface23 = document.getElementById("plot23");
+    const surface24 = document.getElementById("plot24");
+    const surface25 = document.getElementById("plot25");
+    const surface26 = document.getElementById("plot26");
+    const surface27 = document.getElementById("plot27");
+
+
+    //circle data
+    function dist(a, b) {
+      let dx = a.x - b.x;
+      let dy = a.y - b.y;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    let points = [{ x: 0.0, y: 0.0, label: 1 }];
+    let numSamples = 500;
+    //change validation number value
+
+    function classifyCircleData() {
+
+      let radius = 10;
+
+      function getCircleLabel(p, center) {
+        return (dist(p, center) < (radius * 0.5)) ? 1 : -1;
+      }
+
+      // Generate positive points inside the circle.
+      for (let i = 0; i < numSamples / 2; i++) {
+        let r = Math.random() * radius / 2;
+        let angle = Math.random() * 2 * Math.PI;
+        let x = r * Math.sin(angle);
+        let y = r * Math.cos(angle);
+        let label = getCircleLabel({ x: x, y: y }, { x: 0, y: 0 });
+        points.push({ x, y, label });
+      }
+
+      // Generate negative points outside the circle.
+      for (let i = 0; i < numSamples / 2; i++) {
+        let r = Math.random() * radius * 3 / 10 + radius * 7 / 10;
+        let angle = Math.random() * 2 * Math.PI;
+        let x = r * Math.sin(angle);
+        let y = r * Math.cos(angle);
+        let label = getCircleLabel({ x: x, y: y }, { x: 0, y: 0 });
+        points.push({ x, y, label });
+      }
+    }
+
+    function schuffleData() {
+      for (var i = points.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = points[i];
+        points[i] = points[j];
+        points[j] = temp;
+      }
+    }
+    classifyCircleData();
+
+    //plot circle data
+
+    //function tfPlot(values, surface) {
+    //tfvis.render.scatterplot(surface,
+    //{values:[Object.values(values).slice(0, numSamples/2), Object.values(values).slice(numSamples/2+1,numSamples)],
+    //series:['1','-1']},
+    //{xLabel:'x', yLabel:'y',});
+    //}
+    //tfPlot(points, plot);
+
+    schuffleData();
+
+    var dataSpec = {
+      $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+      description: 'A simple scatter plot to display circle data.',
+      data: {
+            values: points,
+          },
+
+          mark: 'point',
+          encoding: {
+            x: { field: 'x', type: 'quantitative' },
+            y: { field: 'y', type: 'quantitative' },
+            color: { "field": "label" },
+            tooltip: [{ field: 'x' }, { field: 'y' }, { field: 'label' }],
+          }
+        };
+        vegaEmbed('#plot1', dataSpec);
+
+
+
+
+
+        const trainingData = tf.tensor2d(points.map(item => [item.x, item.y]));
+        const outputData = tf.tensor(points.map(item => [
+          item.label == 1 ? 1 : 0,
+          item.label == -1 ? 1 : 0,
+        ]));
+
+
+
+
+
+
+        // convert input
+
+
+        // Create a Tensorflow Model
+        //usebias:treu, adam .01
+        const bias = true;
+        const highvalue = 8;
+        const lowvalue = 4;
+        document.getElementById("first_p").innerText = highvalue + " " + highvalue;
+        document.getElementById("second_p").innerText = highvalue + " " + lowvalue;
+
+
+
+        function initNetwork(networkName, firstLayer, secondLayer) {
+          model.add(tf.layers.dense({ inputShape: [2], useBias: bias, units: firstLayer, activation: "sigmoid" }));
+          model.add(tf.layers.dense({ units: secondLayer, useBias: bias, activation: "sigmoid" }));
+          model.add(tf.layers.dense({ units: 2, useBias: bias, activation: "softmax" }));
+          model.compile({ loss: 'meanSquaredError', optimizer: tf.train.adam(.01), metrics: ['accuracy'] });
+          //model.compile({loss:'meanSquaredError', optimizer:tf.train.sgd(.01)}); SGD not working?!
+        }
+
+        const model = tf.sequential();
+        initNetwork(model, highvalue, highvalue)
+
+        const model2 = tf.sequential();
+        model2.add(tf.layers.dense({ inputShape: [2], useBias: bias, units: highvalue, activation: "sigmoid" }));
+        model2.add(tf.layers.dense({ units: lowvalue, useBias: bias, activation: "sigmoid" }));
+        model2.add(tf.layers.dense({ units: 2, useBias: bias, activation: "softmax" }));
+        model2.compile({ loss: 'meanSquaredError', optimizer: tf.train.adam(.01), metrics: ['accuracy'] });
+
+
+
+        // Start Training
+
+
+        async function training(model, surface_fit, surface_weight, surface_bias, surface_heat, surface_abs, surface_quad_dis, input, layer1, layer2, output) {
+
+          let acc = [];
+          let loss = [];
+          let plot2 = {
+            "$schema": 'https://vega.github.io/schema/vega-lite/v5.json',
+            "description": 'A simple scatter plot to display circle data.',
+            "data": {
+              "values": acc,
+            },
+            "vconcat": [
+              {
+                "width": 200,
+                "height": 200,
+                "encoding": { "x": { "field": 'epoch', "type": 'quantitative' },
+            },
+
+                "layer": [
+                  {
+                    "encoding": {
+                      "y": { "field": "acc", "type": 'quantitative' },
+                    },
+                    "mark": {"type":'line', "color":"#5077be", "tooltip":true},
+                  },
+                  {
+                    "encoding": {
+                      "y": { "field": "val_acc", "type": 'quantitative' },
+                    },
+                    "mark": {"type":'line',"color":"#e88504"},
+                  },
+
+                  {"params": [{
+                      "name": "hover",
+                      "select": {
+                        "type": "point",
+                        "fields": ["epoch"],
+                        "nearest": true,
+                        "on": "pointermove",
+                        "clear": "pointerout"
+                      }
+                  }],
+                    "mark": "rule",
+                    "encoding": {
+                      "opacity": {
+                        "condition": { "value": 1, "param": "hover", "empty": false },
+                        "value": 0.1
+                      }
+                    }
+
+                  }
+                ]
+              },
+              {
+                "width": 200,
+                "height": 200,
+                "encoding": { "x": { "field": 'epoch', "type": 'quantitative' }, },
+                "layer": [
+                  {
+                    "encoding": {
+                      "y": { "field": "val_loss", "type": 'quantitative' },
+                    },
+                    "mark": { "type": 'line', "color": "#e88504", "tooltip": true }
+                  },
+                  {
+                    "encoding": {
+                      "y": { "field": "loss", "type": 'quantitative' },
+                    },
+                    "mark": { "type": 'line', "color": "#5077be", "tooltip": true }
+                  },
+                  {
+                    "params": [{
+                      "name": "hover",
+                      "select": {
+                        "type": "point",
+                        "fields": ["epoch"],
+                        "nearest": true,
+                        "on": "pointermove",
+                        "clear": "pointerout"
+                      }
+                    }],
+                    "mark": "rule",
+                    "encoding": {
+                      "opacity": {
+                        "condition": { "value": 1, "param": "hover", "empty": false },
+                        "value": 0.1
+                      }
+                    }
+
+                  }
+                ]
+              },
+
+
+
+            ]
+          }
+
+
+
+          var plot3 = {
+            "$schema": 'https://vega.github.io/schema/vega-lite/v5.json',
+            "description": 'A simple scatter plot to display circle data.',
+            "background":"#FEFEFE",
+            "title":"Traingsprozess",
+            "vconcat": [{
+              "width": 200,
+              "height": 200,
+              "data": {
+                "values": acc,
+              },
+              "encoding": {
+                "x": { "field": "epoch", "type": 'quantitative', "title":"Epoch"  }
+              },
+              "layer": [{
+                "mark": "line",
+                "encoding": {
+                  "y": { "field": "value", "type": 'quantitative', "title":"acc, val_acc" },
+                  "color": {
+                    "legend": {"title":"Legend"},
+                    "field": "type",
+                    "type": "nominal"
+                  }
+                }
+              },
+              {
+                "params": [{
+                  "name": "hover",
+                  "select": {
+                    "type": "point",
+                    "fields": ["epoch"],
+                    "nearest": true,
+                    "on": "pointermove",
+                    "clear": "pointerout"
+                  }
+                }],
+                "transform":[{"pivot": "type", "value": "value", "groupby": ["epoch"]}],
+                "mark": "rule",
+                "encoding": {
+                  "tooltip":[{"field": "epoch", "type": "quantitative", "title": "Epoch"},
+                  {"field": "acc", "type": "quantitative", "title": "Accuracy"},
+                  {"field": "val_acc", "type": "quantitative", "title": "Validation_Accuracy"}],
+                  "opacity": {
+                    "condition": { "value": 1, "param": "hover", "empty": false },
+                    "value": 0.1
+                  }
+                }
+
+
+              }]
+            },
+            {
+              "width": 200,
+              "height": 200,
+              "data": {
+                "values": loss,
+              },
+              "encoding": {
+                "x": { "field": "epoch", "type": 'quantitative',"title":"Epoch" }
+              },
+              "layer": [{
+                "mark": "line",
+                "encoding": {
+                  "y": { "field": "value", "type": 'quantitative',"title":"loss, val_loss" },
+                  "color": {
+                    "field": "type",
+                    "type": "nominal"
+                  }
+                }
+              },
+              {
+                "params": [{
+                  "name": "hover",
+                  "select": {
+                    "type": "point",
+                    "fields": ["epoch"],
+                    "nearest": true,
+                    "on": "pointermove",
+                    "clear": "pointerout"
+                  }
+                }],
+                "transform":[{"pivot": "type", "value": "value", "groupby": ["epoch"]}],
+                "mark": "rule",
+                "encoding": {
+                  "tooltip":[{"field": "epoch", "type": "quantitative", "title": "Epoch"},
+                  {"field": "loss", "type": "quantitative", "title": "loss"},
+                  {"field": "val_loss", "type": "quantitative", "title": "Validation_loss"}],
+                  "opacity": {
+                    "condition": { "value": 1, "param": "hover", "empty": false },
+                    "value": 0.1
+                  }
+                }
+
+
+              }]
+
+            }
+
+            ]
+          }
+                
+
+
+          
+          var plot4 = {
+            "$schema": 'https://vega.github.io/schema/vega-lite/v5.json',
+            "description": 'A simple scatter plot to display circle data.',
+            "data": {
+              "values": acc,
+            },
+
+              "repeat":
+                { "layer": ["val_acc", "acc"] } ,
+              "spec": {
+                "layer":[{
+                "mark": 'line',
+              "encoding": {
+                "x": { "field": "epoch", "type": 'quantitative' },
+                "y": { "field": { "repeat": "layer" }, "type": 'quantitative' },
+                "color": {
+                  "datum": { "repeat": "layer" },
+                  "type": "nominal"
+                }
+              }
+            
+            }]}
+          }
+
+            
+
+      let wzerocounter = [];
+      let wzerocounter1 = [];
+      let wzerocounter2 = [];
+      let wzerocounter3 = [];
+      let bzerocounter = [];
+      let bzerocounter1 = [];
+      let bzerocounter2 = [];
+      let bzerocounter3 = [];
+
+
+      const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
+      const startTime = Date.now();
+      const h = await model.fit(trainingData, outputData, {
+        epochs: 10,
+        //shuffle:true,
+        //epochs:30,
+        validationSplit: 0.2,
+        callbacks: [{
+          onEpochEnd: async (epoch, logs) => {
+            //logs.epoch = epoch;
+            //acc.push(logs);
+            loss.push({epoch:epoch, value:logs.val_loss, type:"val_loss"});
+            loss.push({epoch:epoch, value:logs.loss, type:"loss"});
+            acc.push({epoch:epoch, value:logs.val_acc, type:"val_acc"});
+            acc.push({epoch:epoch, value:logs.acc, type:"acc"});
+            console.log(acc);
+            vegaEmbed(surface22, plot3);
+            var counter = 0;
+            var wcounter1 = 0;
+            var wcounter2 = 0;
+            var wcounter3 = 0;
+            var weigthsLayer0 = await model.getWeights()[0].array();
+            var weigthsLayer1 = await model.getWeights()[2].array();
+            var weigthsLayer2 = await model.getWeights()[4].array();
+
+            for (node of weigthsLayer0) {
+              for (weights of node) {
+                if (Math.abs(weights) < 0.1) {
+                  counter++;
+                  wcounter1++;
+                }
+              }
+            }
+            for (node of weigthsLayer1) {
+              for (weights of node) {
+                if (Math.abs(weights) < 0.1) {
+                  counter++;
+                  wcounter2++;
+                }
+              }
+            }
+            for (node of weigthsLayer2) {
+              for (weights of node) {
+                if (Math.abs(weights) < 0.1) {
+                  counter++;
+                  wcounter3++;
+                }
+              }
+            }
+            wzerocounter.push(counter);
+            wzerocounter1.push(wcounter1);
+            wzerocounter2.push(wcounter2);
+            wzerocounter3.push(wcounter3);
+
+            var bcounter = 0;
+            var bcounter1 = 0;
+            var bcounter2 = 0;
+            var bcounter3 = 0;
+            var biasLayer1 = await model.getWeights()[1].array();
+            var biasLayer2 = await model.getWeights()[3].array();
+            var biasLayer3 = await model.getWeights()[5].array();
+            for (node of biasLayer1) {
+              if (Math.abs(node) < 0.1) {
+                bcounter++;
+                bcounter1++;
+              }
+            }
+            for (node of biasLayer2) {
+              if (Math.abs(node) < 0.1) {
+                bcounter++;
+                bcounter2++;
+              }
+            }
+            for (node of biasLayer3) {
+              if (Math.abs(node) < 0.1) {
+                bcounter++;
+                bcounter3++;
+              }
+            }
+            bzerocounter.push(bcounter);
+            bzerocounter1.push(bcounter1 / layer1);
+            bzerocounter2.push(bcounter2 / layer2);
+            bzerocounter3.push(bcounter3 / output);
+            //model.layers[0].getWeights()[0].forEach(function(weight) {
+            //  console.log('2');
+            //});
+            //console.log(`Epoch ${epoch + 1}:  : counter${counter} `);
+
+
+
+          }
+        },
+          callback]
+      });
+      console.log(Date.now() - startTime);
+
+      var number_weights = input * layer1 + layer1 * layer2 + layer2 * output
+
+      var number_bias = layer1 + layer2 + output
+      var zerofraction = wzerocounter.map(y => y / number_weights).map((y, x) => ({ x, y, }));
+      var zerofraction1 = wzerocounter1.map(y => y / (input * layer1)).map((y, x) => ({ x, y, }));
+      var zerofraction2 = wzerocounter2.map(y => y / (layer1 * layer2)).map((y, x) => ({ x, y, }));
+      var zerofraction3 = wzerocounter3.map(y => y / (layer2 * output)).map((y, x) => ({ x, y, }));
+      var bzerofraction = bzerocounter.map(y => y / number_bias).map((y, x) => ({ x, y, }));
+      var bzerofraction1 = bzerocounter1.map(y => y / layer1).map((y, x) => ({ x, y, }));
+      var bzerofraction2 = bzerocounter2.map(y => y / layer2).map((y, x) => ({ x, y, }));
+      var bzerofraction3 = bzerocounter3.map(y => y / output).map((y, x) => ({ x, y, }));
+
+
+
+
+      // Render Graphs
+      tfvis.render.linechart(surface_weight, {
+        values: [zerofraction, zerofraction1, zerofraction2, zerofraction3], series: ['all', '1', '2', '3']
+      }, {
+        xLabel: 'epoch',
+        yLabel: '#fraction of weights < 0.1',
+        yAxisDomain: [0, 1]
+      }
+      );
+      tfvis.render.linechart(surface_bias, {
+        values: [bzerofraction, bzerofraction1, bzerofraction2, bzerofraction3], series: ['all', '1', '2', '3']
+      },
+        {
+          xLabel: 'epoch',
+          yLabel: '#fraction of bias < 0.1',
+          yAxisDomain: [0, 1]
+        }
+      );
+
+      //scale to 1, compare for equality, show how many are similar. headmap
+
+      //scale independitly
+
+      let predata0 = await (model.getWeights()[2].array());
+      let maxRow = predata0.map(function (row) { return Math.max.apply(Math, row); });
+      //let maxdata0 = Math.max.apply(null, maxRow);
+      let minRow = predata0.map(function (row) { return Math.min.apply(Math, row); });
+      //let mindata0 = Math.min.apply(null, minRow);
+
+      let max_row_length = maxRow.length;
+      var scaleddata0 = [];
+      for (let i = 0; i < max_row_length; i++) {
+        if (Math.abs(maxRow[i]) > Math.abs(minRow[i])) {
+          var scale = Math.abs(maxRow[i]);
+        }
+        else {
+          var scale = Math.abs(minRow[i]);
+        }
+        var helper = predata0[i].map(x => x / scale);
+        scaleddata0.push(helper);
+
+      }
+
+      function sort_dissimilarity(d2array, quad) {
+        let minimum = highvalue;
+        let clothesthneighbour = 1;
+        let d2arraylen = d2array.length;
+        let d2outarraylen = d2array[0].length;
+        for (let outarray = 1; outarray < d2arraylen; outarray++) {
+          let euklidsum = 0
+          for (let inarray = 0; inarray < d2outarraylen; inarray++) {
+            if (quad) {
+              euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]) ** 4;
+            } else {
+              euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]);
+            }
+          }
+          if (euklidsum < minimum) {
+            minimum = euklidsum;
+            clothesthneighbour = outarray;
+          }
+        }
+
+        return clothesthneighbour
+      }
+
+      function sort_dissimilarity_revers(d2array) {
+        let minimum = highvalue * 2;
+        let clothesthneighbour = 1;
+        let d2arraylen = d2array.length;
+        let d2outarraylen = d2array[0].length;
+        let reverse = false;
+        for (let outarray = 1; outarray < d2arraylen; outarray++) {
+          let euklidsum = 0;
+          let euklidsum_revers = 0;
+          for (let inarray = 0; inarray < d2outarraylen; inarray++) {
+            euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]);
+            euklidsum_revers += Math.abs(d2array[0][inarray] + d2array[outarray][inarray]);
+          }
+          if (euklidsum < euklidsum_revers) {
+            if (euklidsum < minimum) {
+              minimum = euklidsum;
+              clothesthneighbour = outarray;
+              reverse = false;
+            }
+          }
+          else if (euklidsum_revers < minimum) {
+            minimum = euklidsum_revers;
+            clothesthneighbour = outarray;
+            reverse = true;
+          }
+        }
+
+        return [clothesthneighbour, reverse]
+      }
+
+
+      let helparray = scaleddata0;
+      var quaddata = scaleddata0;
+      var switched_signs = scaleddata0;
+      let iterations = scaleddata0.length - 1;
+      for (let index = 0; index < iterations; index++) {
+        var exchange_with = sort_dissimilarity(helparray.slice(index, helparray.length), false);
+        if (exchange_with != 1) {
+          var rowhelper = scaleddata0[exchange_with + index];
+          scaleddata0[exchange_with + index] = scaleddata0[index + 1];
+          scaleddata0[index + 1] = rowhelper;
+
+        }
+      }
+      tfvis.render.heatmap(surface_heat, { values: scaleddata0 });
+
+      for (let index = 0; index < iterations; index++) {
+        var exchange_with_quad = sort_dissimilarity(quaddata.slice(index, quaddata.length), true);
+        if (exchange_with_quad != 1) {
+          let rowhelper2 = quaddata[exchange_with_quad + index];
+          quaddata[exchange_with_quad + index] = quaddata[index + 1];
+          quaddata[index + 1] = rowhelper2;
+        }
+      }
+      tfvis.render.heatmap(surface_quad_dis, { values: quaddata });
+      for (let index = 0; index < iterations; index++) {
+        var result = sort_dissimilarity_revers(switched_signs.slice(index, switched_signs.length));
+        if (result[0] != 1) {
+          let rowhelper3 = switched_signs[result[0] + index];
+          switched_signs[result[0] + index] = switched_signs[index + 1];
+          switched_signs[index + 1] = rowhelper3;
+        }
+        if (result[1]) {
+          switched_signs[index + 1] = await switched_signs[index + 1].map(el => -el);
+        }
+      }
+      tfvis.render.heatmap(surface_abs, { values: switched_signs });
+
+
+      var data1 = await (model.getWeights()[2].array());
+      const maxdata1 = Math.max(...data1);
+      var data2 = await (model.getWeights()[4].array());
+      const maxdata2 = Math.max(...data2);
+      //tfvis.render.heatmap(surface_heat, {values:scaleddata0})
+      //other headmaps too
+      //tfvis.render.heatmap(surface_abs,{values:switched_signs});
+      //tfvis.render.heatmap(surface_quad_dis,{values:quaddata});
+      //abs -> sort_dis.. if distance to big, row*(-1)
+
+    //model.summary();
+
+    document.getElementById("trainingOnData").innerText = "The trainings process is done!";
+    }
+
+
+
+    training(model, surface2, surface3, surface4, surface5, surface6, surface7, 2, highvalue, highvalue, 2);
+
+    //training(model2, surface22, surface23, surface24, surface25, surface26, surface27, 2,highvalue, lowvalue,2);
+
+
+
+
+
+
+
+
+
+
+    //model.fit(trainingData, outputData, {epochs:100}).then((history) => {model.predict(tf.tensor2d([[150.0,150.0],[0,0],[10,10],[100,100],[20,-100]])).print()});
+
+    //let prediction = model.predict(tf.tensor2d([[150.0,150.0],[0,0],[10,10],[100,100],[20,-100]]));
+    //document.getElementById("plot2").innerHTML = prediction;
+
+
+
+  </script>
+
+
+</body>
+
+</html>
