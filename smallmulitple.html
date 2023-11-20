@@ -96,8 +96,8 @@ tr:nth-child(even) {
         <select id="dataset_select">
           <option value="circle_dataset">Circle</option>
           <option value="spiral_dataset">Spiral</option>
-          <option value="squares_dataset">Squares</option>
-          <option value="random_dataset">Random</option>
+          <option value="xor_dataset">XOR</option>
+          <option value="gaus_dataset">Gaussian</option>
         </select><br>
         <label>Add/Remove Number of Networks: </label><button onclick="addNetwork()">+</button><button
         onclick="removeNetwork()">-</button><br>
@@ -214,7 +214,20 @@ tr:nth-child(even) {
     }
 
     $("#dataset_select").change(function () {
-      console.log("you changed the value to: " + this.value);
+      points = [];
+      if (this.value == "circle_dataset"){
+        classifyCircleData();
+      }
+      else if (this.value == "spiral_dataset"){
+        spiral();
+      }
+      else if (this.value == "xor_dataset"){
+        createXORData();
+      }
+      else {
+        gaus();
+      }
+      drawDataPlot()
       //load new data
     });
 
@@ -270,7 +283,8 @@ tr:nth-child(even) {
     const surface26 = document.getElementById("plot26");
     const surface27 = document.getElementById("plot27");
 
-
+// DATA
+//Domain[-10,10]
     //circle data
     function dist(a, b) {
       let dx = a.x - b.x;
@@ -278,7 +292,7 @@ tr:nth-child(even) {
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    let points = [{ x: 0.0, y: 0.0, label: 1 }];
+    let points = [];
     let numSamples = 500;
     //change validation number value
 
@@ -302,7 +316,7 @@ tr:nth-child(even) {
 
       // Generate negative points outside the circle.
       for (let i = 0; i < numSamples / 2; i++) {
-        let r = Math.random() * radius * 3 / 10 + radius * 7 / 10;
+        let r = Math.random() * radius * 3 / 10 + radius * 13/20;
         let angle = Math.random() * 2 * Math.PI;
         let x = r * Math.sin(angle);
         let y = r * Math.cos(angle);
@@ -310,6 +324,61 @@ tr:nth-child(even) {
         points.push({ x, y, label });
       }
     }
+
+    function createXORData(){
+      for (let i = 0; i < numSamples; i++) {
+        let x = Math.random()*(16)-8;
+        let y = Math.random()*(16)-8;
+        let padding = 0.8;
+        x += x > 0 ? padding : -padding;
+        y += y > 0 ? padding : -padding;
+        let label = x * y >= 0 ? 1 : 2;
+        points.push({ x, y, label });
+      }
+    }
+
+    function spiral(){
+      let n = numSamples / 2;
+
+      function genSpiral(delta, label) {
+        for (let i = 0; i < n; i++) {
+          let r = i / n * 9;
+          let t = 1.75 * i / n * 2 * Math.PI + delta;
+          let x = r * Math.sin(t);
+          let y = r * Math.cos(t);
+          points.push({x, y, label});
+        }
+      }
+      genSpiral(0,1);
+      genSpiral(Math.PI,2);
+    }
+
+    function gaus(){
+      function normalRandom(mean = 0){
+        let v1 = 0;
+        let v2 = 0;
+        let s = 0;
+        do {
+          v1 = 6 * Math.random() - 3;
+          v2 = 6 * Math.random() - 3;
+          s = v1 * v1 + v2 * v2;
+        } while (s > 3);
+        let result = Math.sqrt(-2 * Math.log((s/3)) / (s/2)) * v1;
+        return mean + result;
+      };
+      function createGaus(cx, cy, label){
+      for (let i = 0; i < numSamples / 4; i++) {
+      let x = normalRandom(cx);
+      let y = normalRandom(cy);
+      points.push({x, y, label});
+    }
+  };
+
+  createGaus(4.5, 4.5, 1); // Gaussian with positive examples.
+  createGaus(-4.5, -4.5, 2);
+
+    }
+
 
     function schuffleData() {
       for (var i = points.length - 1; i > 0; i--) {
@@ -332,7 +401,7 @@ tr:nth-child(even) {
     //tfPlot(points, plot);
 
     schuffleData();
-
+    function drawDataPlot(){
     var dataSpec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
       "description": "A simple scatter plot to display circle data.",
@@ -345,8 +414,8 @@ tr:nth-child(even) {
       "width": 150,
       "height": 150,
       "encoding": {
-        "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"} },
-        "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"} },
+        "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"},"scale":{"domain":[-10,10]} },
+        "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"},"scale":{"domain":[-10,10]} },
         "color": { "field": "label",
                     "scale": {"range":["#d95f02", "#7570b3"],
                               "domain": [1,2] },
@@ -364,9 +433,9 @@ tr:nth-child(even) {
 
     };
     vegaEmbed("#dataplot", dataSpec);
+  }
 
-
-
+  drawDataPlot()
 
 
     const trainingData = tf.tensor2d(points.map(item => [item.x, item.y]));
@@ -483,7 +552,7 @@ tr:nth-child(even) {
       //const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
       const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 10,
+        epochs: 50,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
