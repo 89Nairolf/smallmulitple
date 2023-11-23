@@ -83,6 +83,10 @@ tr:nth-child(even) {
     <a href="#">Training</a>
     <a href="#">Explanation</a>
   </div>
+  <div id="stats"></div>
+
+  <button id="openbutton" onclick="getTestResults()" style="font-size: 90%;">Tests</button>
+  <button id="openbutton" onclick="showTestResults(testtime,memoryUsage)" style="font-size: 90%;">ShowTests</button>
 
   <div id="main">
     <button class="openbtn" id="openbutton" onclick="openNav()" style="font-size: 90%;">☰ Open Sidebar</button>
@@ -139,7 +143,9 @@ tr:nth-child(even) {
   </div>
 
   <script>
-
+    let test_iterations = 1;
+let testtime =[];
+let memoryUsage=[];
     let firstValueNeurons = [];
     let secondValueNeurons = [];
     function addNetwork() {
@@ -266,7 +272,7 @@ tr:nth-child(even) {
 
 
 
-    document.getElementById("trainingOnData").innerText = "One Moment please. The Network is Training";
+    document.getElementById("trainingOnData").innerText = "Press \"Train Network\" to train the models.";
     const plot = document.getElementById("dataplot");
     const surface2 = document.getElementById("plot2");
     const surface3 = document.getElementById("plot3");
@@ -446,9 +452,6 @@ tr:nth-child(even) {
 
 
 
-
-
-
     // convert input
 
 
@@ -457,10 +460,6 @@ tr:nth-child(even) {
 
     const bias = true;
   
-    document.getElementById("first_p").innerText = firstValueNeurons + " " + firstValueNeurons;
-
-
-
     function initNetwork(networkName, firstLayer, secondLayer) {
       networkName.add(tf.layers.dense({ inputShape: [2], useBias: bias, units: firstLayer, activation: "sigmoid" }));
       networkName.add(tf.layers.dense({ units: secondLayer, useBias: bias, activation: "sigmoid" }));
@@ -475,6 +474,7 @@ tr:nth-child(even) {
 
 
     async function training(model, network_index, input, layer1, layer2, output) {
+      statsfunction();
 
       let acc = [];
       let plot3 = {
@@ -548,11 +548,12 @@ tr:nth-child(even) {
       let bzerocounter2 = [];
       let bzerocounter3 = [];
 
+
       let networkID = document.getElementById("acc_val" + (network_index + 1));
       //const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
       const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 50,
+        epochs: 20,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
@@ -564,6 +565,8 @@ tr:nth-child(even) {
             acc.push({ epoch: epoch, value: logs.val_acc, type: "val_acc" });
             acc.push({ epoch: epoch, value: logs.acc, type: "acc" });
             vegaEmbed(networkID, plot3);
+            if (epoch % 10 == 0) {
+            showheatmap(network_index);}
             var counter = 0;
             var wcounter1 = 0;
             var wcounter2 = 0;
@@ -631,7 +634,6 @@ tr:nth-child(even) {
             bzerocounter2.push(bcounter2 / layer2);
             bzerocounter3.push(bcounter3 / output);
             //model.layers[0].getWeights()[0].forEach(function(weight) {
-            //  console.log('2');
             //});
             //console.log(`Epoch ${epoch + 1}:  : counter${counter} `);
 
@@ -805,9 +807,8 @@ tr:nth-child(even) {
       //abs -> sort_dis.. if distance to big, row*(-1)
 
       //model.summary();
-
-      document.getElementById("trainingOnData").innerText = "The trainings process is done!";
-      showheatmap(network_index);
+      //model_training[network_index]=0;
+      await showheatmap(network_index);
     }
 
 
@@ -817,23 +818,26 @@ tr:nth-child(even) {
     //training(model2, surface22, surface23, surface24, surface25, surface26, surface27, 2,highvalue, lowvalue,2);
 
     var models;
+    var model_training;
   async function startTraining() {
+    document.getElementById("trainingOnData").innerText = "The training has started!";
+    model_training=[];
     models = [];
     for (let j = 0; j < document.getElementById("graph_section").childElementCount - 1; j++) {
       let model = await tf.sequential();
       models.push(model);
       await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j]);
-      training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2);
+      model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
     }
+    Promise.all(model_training).then(() => {
+      document.getElementById("trainingOnData").innerText = "The trainings process is done!";
+    }) 
   }
+
 
   async function showheatmap(j){
     let networkIDheatmap = document.getElementById("network_" + (j + 1));
     let data_weights = [];
-    //let data_weights = [{"a": "A", "b": 28, "x":5}, {"a": "B", "b": 55, "x":5}, {"a": "C", "b": 43, "x":5},
-    //  {"a": "D", "b": 91, "x":15}, {"a": "E", "b": 81, "x":5}, {"a": "F", "b": 53, "x":5},
-    //  {"a": "G", "b": 19, "x":5}, {"a": "H", "b": 87, "x":5}, {"a": "I", "b": 52, "x":5}]
-    //console.log(data_weights)
     
     let input = await models[j].getWeights()[0].array()
     let firstLayer = await models[j].getWeights()[2].array()
@@ -909,14 +913,130 @@ tr:nth-child(even) {
     //console.log(models[0].getWeights()[0].array())
   }
 
-
-
     //model.fit(trainingData, outputData, {epochs:100}).then((history) => {model.predict(tf.tensor2d([[150.0,150.0],[0,0],[10,10],[100,100],[20,-100]])).print()});
 
     //let prediction = model.predict(tf.tensor2d([[150.0,150.0],[0,0],[10,10],[100,100],[20,-100]]));
-    //document.getElementById("plot2").innerHTML = prediction;
 
 
+//ctr + r, chrome --enable-precise-memory-info
+//https://jsfiddle.net/asmgdb06/
+//Application Test
+
+function getTestResults() {
+  addNetwork();
+  addNetwork();
+  addNetwork();
+  getTestResultsRec(array = [0,0,0,0])
+}
+
+  async function changeInput(testarray){
+    if (testarray[0]<test_iterations){
+    let [firstValueNeurons, secondValueNeurons] = [[2], [2]];
+      return [firstValueNeurons, secondValueNeurons,1,0]
+  }
+  else if(testarray[1]<test_iterations){
+    let [firstValueNeurons, secondValueNeurons] = [[2,2,2,2], [2,2,2,2]];
+    return [firstValueNeurons, secondValueNeurons,4,1]
+  }
+  else if(testarray[2]<test_iterations){
+    let [firstValueNeurons, secondValueNeurons] = [[8], [8]];
+    return [firstValueNeurons, secondValueNeurons,1,2]
+  }
+  else if(testarray[3]<test_iterations){
+    let [firstValueNeurons, secondValueNeurons] = [[8,8,8,8], [8,8,8,8]];
+    return [firstValueNeurons, secondValueNeurons,4,3]
+  }
+  else{return [0,0]}
+
+}
+ 
+  async function getTestResultsRec(testarray) {
+    [firstValueNeurons, secondValueNeurons, num_net, case_num] = await changeInput(testarray)
+    if (firstValueNeurons != 0){
+    let start = performance.now();
+    document.getElementById("trainingOnData").innerText = "The training has started!";
+    model_training=[];
+    models = [];
+    for (let j = 0; j < num_net; j++) {
+      let model = await tf.sequential();
+      models.push(model);
+      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j]);
+      model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
+    }
+    Promise.all(model_training).then(() => {
+      document.getElementById("trainingOnData").innerText = "The trainings process is done!";
+      uJSHS = window.performance.memory.usedJSHeapSize;}).then(()=>{
+      let end = performance.now();
+      //push("time":,"ram":, "case_number:")
+      //memoryUsage.push({"ram":uJSHS, "time":end-start,"case_number":case_num});
+      memoryUsage.push(uJSHS);
+      testtime.push(end-start);
+      testarray[case_num] += 1;
+      getTestResultsRec(testarray)
+    }) 
+  }
+  else{ 
+
+    localStorage.setItem("testtime", JSON.stringify(testtime));
+    localStorage.setItem("memoryUsage", JSON.stringify(memoryUsage));
+    console.log("simulation done!")
+  //todo storage data
+}
+}
+
+
+
+function statsfunction() {
+var x = [];
+let i  =0;
+
+function clear() {
+    document.getElementById('stats').innerHTML = '';
+}
+
+function show(stat) {
+    var div = document.getElementById('stats');
+    div.appendChild(document.createTextNode(stat));
+    div.appendChild(document.createElement("div"));
+}
+
+var start = Date.now() + 2 * 1000;
+
+function grow() {
+  i++;
+  
+    
+
+    if (Date.now() < start) {
+        return;
+    }
+
+    (function () {
+        clear();
+        var pm = window.performance && window.performance.memory;
+        if (!pm) {
+            show("no performance.memory api");
+            return;
+        }
+        // Memory the JavaScript heap is limited to
+        var lim = pm.jsHeapSizeLimit,
+            // Memory allocated on the JavaScript heap 
+            total = pm.totalJSHeapSize,
+            used = pm.usedJSHeapSize; // Memory currently being used 
+        show("The maximum size of the heap, in bytes, that is available to the context: " + Math.round(lim));
+        show("the total of Allocated Memory heap size: " + Math.round(total));
+        show("The currently active segment of JS heap: " + Math.round(used));
+        show(i);
+    })();
+
+}
+setTimeout(grow, 100);
+}
+
+function showTestResults(){
+  console.log(JSON.parse(localStorage.getItem("testtime")))
+  console.log(JSON.parse(localStorage.getItem("memoryUsage")))
+}
 
   </script>
 
