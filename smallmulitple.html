@@ -273,21 +273,7 @@ let memoryUsage=[];
 
 
     document.getElementById("trainingOnData").innerText = "Press \"Train Network\" to train the models.";
-    const plot = document.getElementById("dataplot");
-    const surface2 = document.getElementById("plot2");
-    const surface3 = document.getElementById("plot3");
-    const surface4 = document.getElementById("plot4");
-    const surface5 = document.getElementById("plot5");
-    const surface6 = document.getElementById("plot6");
-    const surface7 = document.getElementById("plot7");
 
-
-    const surface22 = document.getElementById("plot22");
-    const surface23 = document.getElementById("plot23");
-    const surface24 = document.getElementById("plot24");
-    const surface25 = document.getElementById("plot25");
-    const surface26 = document.getElementById("plot26");
-    const surface27 = document.getElementById("plot27");
 
 // DATA
 //Domain[-10,10]
@@ -453,11 +439,7 @@ let memoryUsage=[];
 
 
     // convert input
-
-
     // Create a Tensorflow Model
-    //usebias:treu, adam .01
-
     const bias = true;
   
     function initNetwork(networkName, firstLayer, secondLayer) {
@@ -553,7 +535,7 @@ let memoryUsage=[];
       //const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
       const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 20,
+        epochs: 50,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
@@ -842,9 +824,21 @@ let memoryUsage=[];
     let input = await models[j].getWeights()[0].array()
     let firstLayer = await models[j].getWeights()[2].array()
     let secondLayer = await models[j].getWeights()[4].array()
-    let all_weights = await [input, firstLayer, secondLayer]
+    let all_weights = [input, firstLayer, secondLayer]
     let maxNeurons = Math.max(...all_weights.map(y => y.length));
     let layer_name =""
+    let max_node_weight  = 0 
+    for (let layer = 0; layer < 3; layer++){
+      let number_neurons = all_weights[layer].length;
+      for (let neuron = 0; neuron < number_neurons; neuron++){
+        let weights = all_weights[layer][neuron].length;
+        let weight_sum = 0;
+        for (let weight = 0; weight < weights; weight++){
+          weight_sum += Math.abs(all_weights[layer][neuron][weight]);
+        } 
+        if (weight_sum > max_node_weight){max_node_weight = weight_sum}
+      } 
+    }
     for (let layer = 0; layer < 3; layer++){
       if (layer == 0){ layer_name = "Input Layer"}
       else if (layer == 1){layer_name ="First Hidden Layer"}
@@ -856,14 +850,15 @@ let memoryUsage=[];
         for (let weight = 0; weight < weights; weight++){
           weight_sum += Math.abs(all_weights[layer][neuron][weight]);
         }
+        let scaled_weight_sum = weight_sum/max_node_weight
         let yposition = ((neuron+1)/(number_neurons+1));
-        data_weights.push({"layer":layer_name,"yposition":yposition, "weight":weight_sum,"neuron":neuron})
+        data_weights.push({"layer":layer_name,"yposition":yposition, "weight":scaled_weight_sum,"neuron":neuron})
       }
 
     }
 
-    data_weights.push({"layer":"Output Layer","yposition":0.33, "weight":1,"neuron":0});
-    data_weights.push({"layer":"Output Layer","yposition":0.67, "weight":1,"neuron":1});
+    data_weights.push({"layer":"Output Layer","yposition":0.33, "weight":0.7,"neuron":0});
+    data_weights.push({"layer":"Output Layer","yposition":0.67, "weight":0.7,"neuron":1});
 
     let plotheatmap = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
