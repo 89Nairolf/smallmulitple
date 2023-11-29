@@ -103,6 +103,12 @@ tr:nth-child(even) {
           <option value="xor_dataset">XOR</option>
           <option value="gaus_dataset">Gaussian</option>
         </select><br>
+        <label>Weight initialization: </label>
+        <select id="weights_init_select">
+          <option value="weights_random">Random values</option>
+          <option value="weights_equal">All values are equal</option>
+          <option value="weights_set">Prescribed values</option>
+        </select><br>
         <label>Add/Remove Number of Networks: </label><button onclick="addNetwork()">+</button><button
         onclick="removeNetwork()">-</button><br>
       <button onclick="startTraining()">Train Network</button><br>
@@ -146,8 +152,10 @@ tr:nth-child(even) {
     let test_iterations = 1;
 let testtime =[];
 let memoryUsage=[];
+let sameWeights = 2;
     let firstValueNeurons = [];
     let secondValueNeurons = [];
+    let currentlytraining = false;
     function addNetwork() {
       let networks = document.getElementById("graph_section").childElementCount;
       if (networks < 5) {
@@ -237,6 +245,18 @@ let memoryUsage=[];
       //load new data
     });
 
+    $("#weights_init_select").change(function () {
+      if (this.value == "weights_random"){
+        sameWeights = 2
+      }
+      else if (this.value == "weights_equal"){
+        sameWeights = 0
+      }
+      else {
+        sameWeights = 1
+      }
+
+    });
     
     function eventLis(inputFirstLayer, inputSecondLayer, id,firstValueNeurons,secondValueNeurons){
       firstValueNeurons.push(2);
@@ -442,10 +462,36 @@ let memoryUsage=[];
     // Create a Tensorflow Model
     const bias = true;
   
-    function initNetwork(networkName, firstLayer, secondLayer) {
+    function initNetwork(networkName, firstLayer, secondLayer, sameWeights) {
+      function setinitWeights(a,b,layer){
+        let weight_array = []
+        for (let index_a = 0; index_a < a; index_a++){
+          for (let index_b = 0; index_b < b; index_b++){
+            weight_array.push((1+index_b)/b)
+            //weight_array.push((1+index_a)/a)  
+          }
+        }console.log(a,b,layer,weight_array)
+        let tensor = tf.tensor(weight_array,[a,b])
+        networkName.layers[layer].setWeights([tensor,tf.zeros([b])])
+      }
       networkName.add(tf.layers.dense({ inputShape: [2], useBias: bias, units: firstLayer, activation: "sigmoid" }));
       networkName.add(tf.layers.dense({ units: secondLayer, useBias: bias, activation: "sigmoid" }));
       networkName.add(tf.layers.dense({ units: 2, useBias: bias, activation: "softmax" }));
+      if (sameWeights == 0){
+        let init_weights_input = tf.fill([2, firstLayer], 0.5)
+        let init_weights_first = tf.fill([firstLayer, secondLayer], 0.5)
+        let init_weights_second = tf.fill([secondLayer, 2], 0.5)
+        console.log(init_weights_input)
+        networkName.layers[0].setWeights([init_weights_input,tf.zeros([firstLayer])])
+        networkName.layers[1].setWeights([init_weights_first,tf.zeros([secondLayer])])
+        networkName.layers[2].setWeights([init_weights_second,tf.zeros([2])])
+      }
+      else if (sameWeights == 1){
+        setinitWeights(2,firstLayer,0);
+        setinitWeights(firstLayer,secondLayer,1);
+        setinitWeights(secondLayer,2,2);
+      }
+      
       networkName.compile({ loss: "meanSquaredError", optimizer: tf.train.adam(.01), metrics: ["accuracy"] });
       //model.compile({loss:'meanSquaredError', optimizer:tf.train.sgd(.01)}); SGD not working?!
     }
@@ -802,19 +848,22 @@ let memoryUsage=[];
     var models;
     var model_training;
   async function startTraining() {
+    if (!currentlytraining){
+    currentlytraining = true;
     document.getElementById("trainingOnData").innerText = "The training has started!";
     model_training=[];
     models = [];
     for (let j = 0; j < document.getElementById("graph_section").childElementCount - 1; j++) {
       let model = await tf.sequential();
       models.push(model);
-      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j]);
+      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j], 2);
       model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
     }
     Promise.all(model_training).then(() => {
       document.getElementById("trainingOnData").innerText = "The trainings process is done!";
+      currentlytraining = false;
     }) 
-  }
+  }}
 
 
   async function showheatmap(j){
@@ -955,7 +1004,7 @@ function getTestResults() {
     for (let j = 0; j < num_net; j++) {
       let model = await tf.sequential();
       models.push(model);
-      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j]);
+      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j], 2);
       model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
     }
     Promise.all(model_training).then(() => {
