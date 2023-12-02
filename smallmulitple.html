@@ -111,7 +111,7 @@ tr:nth-child(even) {
         </select><br>
         <label>Add/Remove Number of Networks: </label><button onclick="addNetwork()">+</button><button
         onclick="removeNetwork()">-</button><br>
-      <button onclick="startTraining()">Train Network</button><br>
+      <button onclick="startTraining2(workerlist)">Train Network</button><br>
         <table id="table">
           <tr>
             <th>Layer: </th>
@@ -149,6 +149,7 @@ tr:nth-child(even) {
   </div>
 
   <script>
+    let workerlist = [];
     let test_iterations = 1;
 let testtime =[];
 let memoryUsage=[];
@@ -502,8 +503,6 @@ let sameWeights = 2;
 
 
     async function training(model, network_index, input, layer1, layer2, output) {
-      statsfunction();
-
       let acc = [];
       let plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -581,7 +580,7 @@ let sameWeights = 2;
       //const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
       const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 50,
+        epochs: 5,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
@@ -840,10 +839,166 @@ let sameWeights = 2;
     }
 
 
+    function plot_training(id, acc){
+      let networkID = document.getElementById("acc_val"+(id+1));
+      let plot3 = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "A simple scatter plot to display circle data.",
+        "background": "#FEFEFE",
+        "title": "Traing process",
+        "vconcat": [{
+          "width": 125,
+          "height": 125,
+          "data": {
+            "values": acc,
+          },
+          "encoding": {
+            "x": { "field": "epoch", "type": "quantitative", "title": "Epoch" }
+          },
+          "layer": [{
+            "mark": "line",
+            "encoding": {
+              "y": { "field": "value", "type": "quantitative", "title": "Value", "scale":{"domain":[0,1]}, },
+              "color":{"field":"type", "type":"nominal",
+                "scale":{"range":["#33a02c","#1f78b4","#a6cee3","#b2df8a"],
+                          "domain":["acc","val_acc","loss","val_loss"]},
+                "legend": {"labelExpr": "datum.label == 'acc' ? 'Accuricity' :datum.label == 'loss' ? 'Loss Value' :datum.label == 'val_acc' ? 'Validation Accuricity' : 'Loss Validation'"
+            },
+            "title":"Training Values",
+          }
+              //"color": {
+              //  "legend": { "title": "Legend" },
+              //  "field": "type",
+              //  "type": "nominal"
+              //}
+            }
+          },
+          {
+            "params": [{
+              "name": "hover",
+              "select": {
+                "type": "point",
+                "fields": ["epoch"],
+                "nearest": true,
+                "on": "pointermove",
+                "clear": "pointerout"
+              }
+            }],
+            "transform": [{ "pivot": "type", "value": "value", "groupby": ["epoch"] }],
+            "mark": "rule",
+            "encoding": {
+              "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
+              { "field": "acc", "type": "quantitative", "title": "Accuracy" },
+              { "field": "val_acc", "type": "quantitative", "title": "Validation_Accuracy" },
+              { "field": "loss", "type": "quantitative", "title": "loss" },
+              { "field": "val_loss", "type": "quantitative", "title": "Validation_loss" }],
+              "opacity": {
+                "condition": { "value": 1, "param": "hover", "empty": false },
+                "value": 0.0
+              }
+            }
+          }]
+        }
 
-    //training(model, surface2, surface3, surface4, surface5, surface6, surface7, 2, firstValueNeurons, firstValueNeurons, 2);
+        ]
+      }
+      vegaEmbed(networkID, plot3);
+    }
 
-    //training(model2, surface22, surface23, surface24, surface25, surface26, surface27, 2,highvalue, lowvalue,2);
+    function plot_heat(id, data_weights){
+      console.log(data_weights)
+    let networkIDheatmap = document.getElementById("network_" + (id + 1));
+    let plotheatmap = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "Displaying the Weights of Nodes",
+        "background": "#FEFEFE",
+        "title": "Weights of Neurons",
+
+          "width": 125,
+          "height": 125,
+          "data": {
+            "values": data_weights,
+          },
+          "encoding": {
+            "x": { 
+              "field": "layer", 
+              "type": "ordinal",
+              "axis": { "title":"","labelAngle":40},
+              "sort":["Input Layer","First Hidden Layer","Second Hidden Layer","Output Layer"] },
+            "y": { 
+              "field": "yposition", 
+              "type": "quantitative",
+              "axis": {
+                "ticks": false,
+                "labels":false,
+                "title":"",
+                },
+              "scale":{"domain":[1,0]},
+              },
+            "size":{
+              "field":"weight",
+              "type":"quantitative",
+              "title":"Weight related to main Node"
+            },
+            "tooltip":[
+              {"field":"layer", "type":"ordinal", "title":"Layer"},
+              {"field":"neuron", "type":"qualitative", "title":"Neuron"},
+              {"field":"weight", "type":"qualitative", "title":"Weight"}
+            ]
+          },
+            "mark": "circle",
+            "config": {"axis": {"grid": false}}
+
+            }
+          
+
+            vegaEmbed(networkIDheatmap, plotheatmap);
+    //console.log(models[0].getWeights()[0].array())
+  }
+
+
+
+    //Worker --allow-file-access-from-files
+    async function initWorker(){
+      let acc = [];
+      for (let i = 0; i<4; i++){
+        const worker = await new Worker("worker.js");
+        worker.addEventListener("message", function handleMessageFromWorker(msg){
+        console.log("message from worker received in main:", msg.data.length);
+          //acc.push(msg)
+          //check firs
+          if (msg.data[1] == "acc"){
+          plot_training(msg.data[0], msg.data[2]);
+          }
+          if (msg.data[1] == "heatmap"){
+          plot_heat(msg.data[0], msg.data[2]);
+          }
+      })
+        workerlist.push(worker)
+      }
+      return workerlist
+    }
+
+    async function startTraining2(workerlist){
+      if (workerlist.length == 0){workerlist = await initWorker()}
+
+      if (!currentlytraining){
+    currentlytraining = true;
+    document.getElementById("trainingOnData").innerText = "The training has started!";
+    model_training=[];
+    models = [];
+    for (let j = 0; j < document.getElementById("graph_section").childElementCount - 1; j++) {
+      workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points})     
+    }
+    //model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
+
+//Promise.all(model_training).then(() => {
+  //document.getElementById("trainingOnData").innerText = "The trainings process is done!";
+  //}) 
+  currentlytraining = false;
+  }
+    }
+
 
     var models;
     var model_training;
@@ -938,9 +1093,9 @@ let sameWeights = 2;
               },
             "size":{
               "field":"weight",
-              "type":"quantitative"
+              "type":"quantitative",
+              "title":"Weight related to main Node"
             },
-            "color":{"title":"Weight"},
             "tooltip":[
               {"field":"layer", "type":"ordinal", "title":"Layer"},
               {"field":"neuron", "type":"qualitative", "title":"Neuron"},
@@ -1028,54 +1183,6 @@ function getTestResults() {
 }
 }
 
-
-
-function statsfunction() {
-var x = [];
-let i  =0;
-
-function clear() {
-    document.getElementById('stats').innerHTML = '';
-}
-
-function show(stat) {
-    var div = document.getElementById('stats');
-    div.appendChild(document.createTextNode(stat));
-    div.appendChild(document.createElement("div"));
-}
-
-var start = Date.now() + 2 * 1000;
-
-function grow() {
-  i++;
-  
-    
-
-    if (Date.now() < start) {
-        return;
-    }
-
-    (function () {
-        clear();
-        var pm = window.performance && window.performance.memory;
-        if (!pm) {
-            show("no performance.memory api");
-            return;
-        }
-        // Memory the JavaScript heap is limited to
-        var lim = pm.jsHeapSizeLimit,
-            // Memory allocated on the JavaScript heap 
-            total = pm.totalJSHeapSize,
-            used = pm.usedJSHeapSize; // Memory currently being used 
-        show("The maximum size of the heap, in bytes, that is available to the context: " + Math.round(lim));
-        show("the total of Allocated Memory heap size: " + Math.round(total));
-        show("The currently active segment of JS heap: " + Math.round(used));
-        show(i);
-    })();
-
-}
-setTimeout(grow, 100);
-}
 
 function showTestResults(){
   console.log(JSON.parse(localStorage.getItem("testtime")))
