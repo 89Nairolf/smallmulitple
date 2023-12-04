@@ -55,6 +55,8 @@ tr:nth-child(even) {
     background-color: #444;
   }
 
+  .reg {display:none;}
+
   #main {
     transition: margin-left .5s;
     padding: 16px;
@@ -97,11 +99,18 @@ tr:nth-child(even) {
       <div id="parameters">
         
         <label>Selected Dataset: </label>
+        <label>Type of Network: </label>
+        <select id="networktype">
+          <option value="classification">Classification</option>
+          <option value="regression">Regression</option>
+        </select><br>
         <select id="dataset_select">
-          <option value="circle_dataset">Circle</option>
-          <option value="spiral_dataset">Spiral</option>
-          <option value="xor_dataset">XOR</option>
-          <option value="gaus_dataset">Gaussian</option>
+          <option class= "classdata" value="circle_dataset">Circle</option>
+          <option class= "classdata" value="spiral_dataset">Spiral</option>
+          <option class= "classdata" value="xor_dataset">XOR</option>
+          <option class= "classdata" value="gaus_dataset">Gaussian</option>
+          <option class= "reg" value="regplain">Plain</option>
+          <option class= "reg" value="reggaus">Gaussian</option>
         </select><br>
         <label>Weight initialization: </label>
         <select id="weights_init_select">
@@ -154,6 +163,7 @@ tr:nth-child(even) {
 let testtime =[];
 let memoryUsage=[];
 let sameWeights = 2;
+let classifier = true;
     let firstValueNeurons = [];
     let secondValueNeurons = [];
     let currentlytraining = false;
@@ -167,16 +177,27 @@ let sameWeights = 2;
         container.style.height = "240px";
         container.style.display = "flex";
         document.getElementById("graph_section").appendChild(container);
+        let acc_val = document.createElement("DIV");
+        acc_val.setAttribute("id", "acc_val" + networks);
+        acc_val.style.height = "240px";
+        acc_val.style.width = "300px";
+        document.getElementById("graph_block_" + networks).appendChild(acc_val);
         let network = document.createElement("DIV");
         network.setAttribute("id", "network_" + networks);
         network.style.height = "240px";
         network.style.width = "250px";
         document.getElementById("graph_block_" + networks).appendChild(network);
-        let acc_val = document.createElement("DIV");
-        acc_val.setAttribute("id", "acc_val" + networks);
-        acc_val.style.height = "240px";
-        acc_val.style.width = "250px";
-        document.getElementById("graph_block_" + networks).appendChild(acc_val);
+        let lrdgraph = document.createElement("DIV");
+        lrdgraph.setAttribute("id", "lrd_" + networks);
+        lrdgraph.style.height = "240px";
+        lrdgraph.style.width = "250px";
+        document.getElementById("graph_block_" + networks).appendChild(lrdgraph);
+        let similarity_chart = document.createElement("DIV");
+        similarity_chart.setAttribute("id", "similarity_" + networks);
+        similarity_chart.style.height = "240px";
+        similarity_chart.style.width = "250px";
+        document.getElementById("graph_block_" + networks).appendChild(similarity_chart);
+        
         //append to table
         let tr  = document.createElement("tr");
         tr.setAttribute("id", "input_tr_" + networks);
@@ -229,22 +250,9 @@ let sameWeights = 2;
     }
 
     $("#dataset_select").change(function () {
-      points = [];
-      if (this.value == "circle_dataset"){
-        classifyCircleData();
-      }
-      else if (this.value == "spiral_dataset"){
-        spiral();
-      }
-      else if (this.value == "xor_dataset"){
-        createXORData();
-      }
-      else {
-        gaus();
-      }
-      drawDataPlot()
-      //load new data
+      selectData(this.value)
     });
+
 
     $("#weights_init_select").change(function () {
       if (this.value == "weights_random"){
@@ -259,6 +267,47 @@ let sameWeights = 2;
 
     });
     
+    $("#networktype").change(function () {
+      if (this.value == "classification"){
+        classifier = true
+        $(".reg").css("display", "none")
+        $(".classdata").css("display", "inline")
+        $("#dataset_select").val("circle_dataset");
+      }
+      else if (this.value == "regression"){
+        classifier = false
+        $(".classdata").css("display", "none")
+        $(".reg").css("display", "inline")
+        $("#dataset_select").val("regplain")
+      }
+      selectData($("#dataset_select").val())
+    });
+
+    function selectData(value){
+    points = [];
+      if (value == "circle_dataset"){
+        classifyCircleData();
+      }
+      else if (value == "spiral_dataset"){
+        spiral();
+      }
+      else if (value == "xor_dataset"){
+        createXORData();
+      }
+      else if  (value == "gaus_dataset"){
+        gaus();
+      }
+      else if  (value == "regplain"){
+        regressionPlain();
+      }
+      else{
+        regressionGaus();
+      }
+      drawDataPlot()
+      //load new data
+    }
+
+
     function eventLis(inputFirstLayer, inputSecondLayer, id,firstValueNeurons,secondValueNeurons){
       firstValueNeurons.push(2);
       secondValueNeurons.push(2);
@@ -392,6 +441,14 @@ let sameWeights = 2;
 
     }
 
+    function regressionPlain(){
+      for (let i = 0; i<numSamples; i++){
+        let x = Math.random()*20-10;
+        let y = Math.random()*20-10;
+        let label = (x+y)/20
+        points.push({x, y, label})
+      }
+    }
 
     function schuffleData() {
       for (var i = points.length - 1; i > 0; i--) {
@@ -399,6 +456,33 @@ let sameWeights = 2;
         var temp = points[i];
         points[i] = points[j];
         points[j] = temp;
+      }
+    }
+    function regressionGaus(){
+      let gaussians = [
+        [-7,4,1],
+        [0,4,-1],
+        [7,4,1],
+        [-7,-4,-1],
+        [0,-4,1],
+        [7,-4,-1]
+      ]
+      for (let i=0; i <numSamples; i++){
+        let x = Math.random()*20-10;
+        let y = Math.random()*20-10;
+        let label = 10
+        for (let j = 0; j < 6; j++){
+          let clothestPoint = gaussians[j][2]*(dist({x,y},{x:gaussians[j][0],y:gaussians[j][1]}))
+          if (Math.abs(clothestPoint) < Math.abs(label)) {
+            label = clothestPoint;
+          }
+        }
+        if (label > 0 ){
+          label = 1-(label/7)
+        }else{
+          label = -1-(label/7)
+        }
+        points.push({x:x, y:y, label:label})
       }
     }
     classifyCircleData();
@@ -415,7 +499,9 @@ let sameWeights = 2;
 
     schuffleData();
     function drawDataPlot(){
-    var dataSpec = {
+    let dataSpec
+    if ($("#networktype").val() == "classification"){
+    dataSpec = {
       "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
       "description": "A simple scatter plot to display circle data.",
       "data": {
@@ -444,7 +530,30 @@ let sameWeights = 2;
       },
 
 
-    };
+    };}
+    else{
+      dataSpec= {"$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "description": "A simple scatter plot to display circle data.",
+      "data": {
+        "values": points,
+      },
+
+      "mark": "point",
+      "title":"Current Dataset",
+      "width": 150,
+      "height": 150,
+      "encoding": {
+        "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"},"scale":{"domain":[-10,10]} },
+        "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"},"scale":{"domain":[-10,10]} },
+        "color": { "field": "label", "type":"quantitative", "title":"Value","scale": {
+        "domainMid": 0,
+        "range": "diverging"
+      }},
+
+        "tooltip": [{ "field": "label", "title":"Value" },{ "field": "x","title":"X-Value" }, { "field": "y","title":"Y-Value" }, ],    
+      },}
+    }
+
     vegaEmbed("#dataplot", dataSpec);
   }
 
@@ -471,7 +580,7 @@ let sameWeights = 2;
             weight_array.push((1+index_b)/b)
             //weight_array.push((1+index_a)/a)  
           }
-        }console.log(a,b,layer,weight_array)
+        }
         let tensor = tf.tensor(weight_array,[a,b])
         networkName.layers[layer].setWeights([tensor,tf.zeros([b])])
       }
@@ -482,7 +591,6 @@ let sameWeights = 2;
         let init_weights_input = tf.fill([2, firstLayer], 0.5)
         let init_weights_first = tf.fill([firstLayer, secondLayer], 0.5)
         let init_weights_second = tf.fill([secondLayer, 2], 0.5)
-        console.log(init_weights_input)
         networkName.layers[0].setWeights([init_weights_input,tf.zeros([firstLayer])])
         networkName.layers[1].setWeights([init_weights_first,tf.zeros([secondLayer])])
         networkName.layers[2].setWeights([init_weights_second,tf.zeros([2])])
@@ -580,7 +688,7 @@ let sameWeights = 2;
       //const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
       const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 5,
+        epochs: 20,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
@@ -711,12 +819,10 @@ let sameWeights = 2;
 
       //scale independitly
 
+
       let predata0 = await (model.getWeights()[2].array());
       let maxRow = predata0.map(function (row) { return Math.max.apply(Math, row); });
-      //let maxdata0 = Math.max.apply(null, maxRow);
       let minRow = predata0.map(function (row) { return Math.min.apply(Math, row); });
-      //let mindata0 = Math.min.apply(null, minRow);
-
       let max_row_length = maxRow.length;
       var scaleddata0 = [];
       for (let i = 0; i < max_row_length; i++) {
@@ -840,6 +946,7 @@ let sameWeights = 2;
 
 
     function plot_training(id, acc){
+      //for (let i = 0; i < networks; i++){
       let networkID = document.getElementById("acc_val"+(id+1));
       let plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -904,9 +1011,11 @@ let sameWeights = 2;
       }
       vegaEmbed(networkID, plot3);
     }
+  //}
 
+    //function plot_heat(networks, data_weights, epoch){
     function plot_heat(id, data_weights){
-      console.log(data_weights)
+    //for (let i = 0; i < networks; i++){
     let networkIDheatmap = document.getElementById("network_" + (id + 1));
     let plotheatmap = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
@@ -938,7 +1047,7 @@ let sameWeights = 2;
             "size":{
               "field":"weight",
               "type":"quantitative",
-              "title":"Weight related to main Node"
+              "title":"Influence of Node"
             },
             "tooltip":[
               {"field":"layer", "type":"ordinal", "title":"Layer"},
@@ -948,30 +1057,163 @@ let sameWeights = 2;
           },
             "mark": "circle",
             "config": {"axis": {"grid": false}}
-
             }
-          
-
             vegaEmbed(networkIDheatmap, plotheatmap);
-    //console.log(models[0].getWeights()[0].array())
+
   }
+  function plot_lrd(id, lrd){
+      let networkID = document.getElementById("lrd_"+(id+1));
+      let lrdplot = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "A simple scatter plot to display circle data.",
+        "background": "#FEFEFE",
+        "title": "LearningRateDecay",
+        "vconcat": [{
+          "width": 125,
+          "height": 125,
+          "data": {
+            "values": lrd,
+          },
+          "encoding": {
+            "x": { "field": "epoch", "type": "quantitative", "title": "Epoch" }
+          },
+          "layer": [{
+            "mark": "line",
+            "encoding": {
+              "y": { "field": "value", "type": "quantitative", "title": "Learning Rate", "scale":{"domain":[0,0.75]}, },
+              "color":{"field":"type", "type":"nominal",
+                "scale":{"range":["#33a02c","#1f78b4","#a6cee3"],
+                          "domain":["input","hidden1","hidden2"]},
+                "legend": {"labelExpr": "datum.label == 'input' ? 'Input' :datum.label == 'hidden1' ? 'First Layer' : 'Second Layer'"
+            },
+            "title":"Layers",
+          }
+              //"color": {
+              //  "legend": { "title": "Legend" },
+              //  "field": "type",
+              //  "type": "nominal"
+              //}
+            }
+          },
+          {
+            "params": [{
+              "name": "hover",
+              "select": {
+                "type": "point",
+                "fields": ["epoch"],
+                "nearest": true,
+                "on": "pointermove",
+                "clear": "pointerout"
+              }
+            }],
+            "transform": [{ "pivot": "type", "value": "value", "groupby": ["epoch"] }],
+            "mark": "rule",
+            "encoding": {
+              "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
+              { "field": "input", "type": "quantitative", "title": "Input" },
+              { "field": "hidden1", "type": "quantitative", "title": "Hidden Layer 1" },
+              { "field": "hidden2", "type": "quantitative", "title": "Hidden Layer 2" },],
+              "opacity": {
+                "condition": { "value": 1, "param": "hover", "empty": false },
+                "value": 0.0
+              }
+            }
+          }]
+        }
+
+        ]
+      }
+      vegaEmbed(networkID, lrdplot);
+    }
+
+    function plot_similarity(id, switched_signs){
+      let networkID = document.getElementById("similarity_"+(id+1));
+      let similarity_chart= {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+          "data":{"values":switched_signs},
+          "mark": "bar",
+          "encoding": {
+            "x": {"field": "similarity"},
+            "y": {"aggregate":"count", "type": "quantitative"},
+            "xOffset": {"field": "layerID"},
+            "color": {"field": "layerID"}
+          } 
+        }
+      
+
+        let similarity_chart2= {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "repeat": {"layer": ["0","1","2"]},
+        "spec": {
+          "mark": "bar",
+          "encoding": {
+            "x": {
+              "field": "similarity",
+              "type": "nominal"
+            },
+            "y": {
+              "aggregate": "count",
+              "field": {"repeat": "layer"},
+              "title": "Sim in Percentage"
+            },
+            "color": {"datum": {"repeat": "layer"}, "title": "Layer"},
+            "xOffset": {"datum": {"repeat": "layer"}}
+          }
+        },
+        "config": {
+          "mark": {"invalid": null}
+        }}
+
+      vegaEmbed(networkID, similarity_chart);
+    }
 
 
+    //check if the smallest dataset got new elements
+    function checkForEpoch(array, id){
+      for (let i = 0; i < array.length; i++){
+        if (array[i].length > array[id].length){
+          return false
+        }
+      }
+      return true
+    }
 
     //Worker --allow-file-access-from-files
-    async function initWorker(){
+    async function initWorker(networks){
       let acc = [];
+      let heat = [];
+      for (let i = 0 ; i < networks; i++){
+        acc.push([]);
+        heat.push([]);
+      }
       for (let i = 0; i<4; i++){
         const worker = await new Worker("worker.js");
         worker.addEventListener("message", function handleMessageFromWorker(msg){
-        console.log("message from worker received in main:", msg.data.length);
-          //acc.push(msg)
+        //acc.push(msg)
           //check firs
           if (msg.data[1] == "acc"){
-          plot_training(msg.data[0], msg.data[2]);
+            //acc[msg.data[0]].push(msg.data[2]);
+            //if (checkForEpoch(acc, msg.data[0])){
+            //  plot_training(networks, acc, acc[msg.data[0]].length-1);
+              plot_training(msg.data[0], msg.data[2]);
+            //}
+            
+          
           }
-          if (msg.data[1] == "heatmap"){
-          plot_heat(msg.data[0], msg.data[2]);
+          else if (msg.data[1] == "heatmap"){
+            //heat[msg.data[0]].push(msg.data[2]);
+            //if (checkForEpoch(heat, msg.data[0])){
+            //  plot_heat(networks, heat, heat[msg.data[0]].length-1);
+              plot_heat(msg.data[0], msg.data[2]);
+            //}
+          }
+          else if (msg.data[1] == "lrd"){
+            //learningRateDecay
+              plot_lrd(msg.data[0], msg.data[2]);
+          }
+          else if (msg.data[1]=="similarity"){
+            plot_similarity(msg.data[0], msg.data[2])
+
           }
       })
         workerlist.push(worker)
@@ -980,15 +1222,16 @@ let sameWeights = 2;
     }
 
     async function startTraining2(workerlist){
-      if (workerlist.length == 0){workerlist = await initWorker()}
+      let networks = document.getElementById("graph_section").childElementCount - 1;
+      if (workerlist.length == 0){workerlist = await initWorker(networks)}
 
       if (!currentlytraining){
     currentlytraining = true;
     document.getElementById("trainingOnData").innerText = "The training has started!";
     model_training=[];
     models = [];
-    for (let j = 0; j < document.getElementById("graph_section").childElementCount - 1; j++) {
-      workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points})     
+    for (let j = 0; j < networks; j++) {
+      workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points, classifier:classifier})     
     }
     //model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
 
@@ -1178,7 +1421,6 @@ function getTestResults() {
 
     localStorage.setItem("testtime", JSON.stringify(testtime));
     localStorage.setItem("memoryUsage", JSON.stringify(memoryUsage));
-    console.log("simulation done!")
   //todo storage data
 }
 }
