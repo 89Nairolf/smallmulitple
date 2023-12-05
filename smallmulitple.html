@@ -97,13 +97,13 @@ tr:nth-child(even) {
     <div id="parameterdiv" style="display: flex; margin: 0px 0px 0px 50px;">
       <div id="dataplot" style="height:200px; width: 250px; margin-right:50px"></div>
       <div id="parameters">
-        
-        <label>Selected Dataset: </label>
         <label>Type of Network: </label>
         <select id="networktype">
           <option value="classification">Classification</option>
           <option value="regression">Regression</option>
         </select><br>
+        
+        <label>Selected Dataset: </label>
         <select id="dataset_select">
           <option class= "classdata" value="circle_dataset">Circle</option>
           <option class= "classdata" value="spiral_dataset">Spiral</option>
@@ -136,7 +136,7 @@ tr:nth-child(even) {
     </div>
 
 
-    <div id="graph_section" style="margin-left: 200px;">
+    <div id="graph_section" style="margin-left: 300px;">
       <p id="trainingOnData" style="margin-top:50px;"></p>
       <!--
       <div style="width:40%">
@@ -180,17 +180,17 @@ let classifier = true;
         let acc_val = document.createElement("DIV");
         acc_val.setAttribute("id", "acc_val" + networks);
         acc_val.style.height = "240px";
-        acc_val.style.width = "300px";
+        acc_val.style.width = "320px";
         document.getElementById("graph_block_" + networks).appendChild(acc_val);
         let network = document.createElement("DIV");
         network.setAttribute("id", "network_" + networks);
         network.style.height = "240px";
-        network.style.width = "250px";
+        network.style.width = "270px";
         document.getElementById("graph_block_" + networks).appendChild(network);
         let lrdgraph = document.createElement("DIV");
         lrdgraph.setAttribute("id", "lrd_" + networks);
         lrdgraph.style.height = "240px";
-        lrdgraph.style.width = "250px";
+        lrdgraph.style.width = "300px";
         document.getElementById("graph_block_" + networks).appendChild(lrdgraph);
         let similarity_chart = document.createElement("DIV");
         similarity_chart.setAttribute("id", "similarity_" + networks);
@@ -442,7 +442,8 @@ let classifier = true;
     }
 
     function regressionPlain(){
-      for (let i = 0; i<numSamples; i++){
+      let moreSamples = numSamples*2
+      for (let i = 0; i<moreSamples; i++){
         let x = Math.random()*20-10;
         let y = Math.random()*20-10;
         let label = (x+y)/20
@@ -467,7 +468,8 @@ let classifier = true;
         [0,-4,1],
         [7,-4,-1]
       ]
-      for (let i=0; i <numSamples; i++){
+      let moreSamples = numSamples*2
+      for (let i=0; i <moreSamples; i++){
         let x = Math.random()*20-10;
         let y = Math.random()*20-10;
         let label = 10
@@ -478,9 +480,9 @@ let classifier = true;
           }
         }
         if (label > 0 ){
-          label = 1-(label/7)
+          label = 1-(label/Math.sqrt(45))
         }else{
-          label = -1-(label/7)
+          label = -1-(label/Math.sqrt(45))
         }
         points.push({x:x, y:y, label:label})
       }
@@ -946,9 +948,10 @@ let classifier = true;
 
 
     function plot_training(id, acc){
-      //for (let i = 0; i < networks; i++){
       let networkID = document.getElementById("acc_val"+(id+1));
-      let plot3 = {
+      let plot3
+      if ($("#networktype").val() == "classification"){
+      plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "A simple scatter plot to display circle data.",
         "background": "#FEFEFE",
@@ -1008,6 +1011,68 @@ let classifier = true;
         }
 
         ]
+      }
+    }
+      else{
+        plot3 = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+        "description": "A simple scatter plot to display circle data.",
+        "background": "#FEFEFE",
+        "title": "Traing process",
+        "vconcat": [{
+          "width": 125,
+          "height": 125,
+          "data": {
+            "values": acc,
+          },
+          "encoding": {
+            "x": { "field": "epoch", "type": "quantitative", "title": "Epoch" }
+          },
+          "layer": [{
+            "mark": "line",
+            "encoding": {
+              "y": { "field": "value", "type": "quantitative", "title": "Value", "scale":{"domain":[0,0.5]}, },
+              "color":{"field":"type", "type":"nominal",
+                "scale":{"range":["#33a02c","#1f78b4"],
+                          "domain":["loss","val_loss"]},
+                "legend": {"labelExpr": "datum.label == 'loss' ? 'Loss Value' : 'Loss Validation'"
+            },
+            "title":"Training Values",
+          }
+              //"color": {
+              //  "legend": { "title": "Legend" },
+              //  "field": "type",
+              //  "type": "nominal"
+              //}
+            }
+          },
+          {
+            "params": [{
+              "name": "hover",
+              "select": {
+                "type": "point",
+                "fields": ["epoch"],
+                "nearest": true,
+                "on": "pointermove",
+                "clear": "pointerout"
+              }
+            }],
+            "transform": [{ "pivot": "type", "value": "value", "groupby": ["epoch"] }],
+            "mark": "rule",
+            "encoding": {
+              "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
+              { "field": "loss", "type": "quantitative", "title": "loss" },
+              { "field": "val_loss", "type": "quantitative", "title": "Validation_loss" }],
+              "opacity": {
+                "condition": { "value": 1, "param": "hover", "empty": false },
+                "value": 0.0
+              }
+            }
+          }]
+        }
+
+        ]
+      }
       }
       vegaEmbed(networkID, plot3);
     }
@@ -1080,7 +1145,7 @@ let classifier = true;
           "layer": [{
             "mark": "line",
             "encoding": {
-              "y": { "field": "value", "type": "quantitative", "title": "Learning Rate", "scale":{"domain":[0,0.75]}, },
+              "y": { "field": "value", "type": "quantitative", "title": "Learning Rate", "scale":{"domain":[0,0.6]}, },
               "color":{"field":"type", "type":"nominal",
                 "scale":{"range":["#33a02c","#1f78b4","#a6cee3"],
                           "domain":["input","hidden1","hidden2"]},
@@ -1110,7 +1175,7 @@ let classifier = true;
             "mark": "rule",
             "encoding": {
               "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
-              { "field": "input", "type": "quantitative", "title": "Input" },
+              { "field": "input", "type": "quantitative", "title": "Input Layer" },
               { "field": "hidden1", "type": "quantitative", "title": "Hidden Layer 1" },
               { "field": "hidden2", "type": "quantitative", "title": "Hidden Layer 2" },],
               "opacity": {
@@ -1132,6 +1197,8 @@ let classifier = true;
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
           "data":{"values":switched_signs},
           "mark": "bar",
+          
+          "height": 150,
           "encoding": {
             "x": {"field": "similarity"},
             "y": {"aggregate":"count", "type": "quantitative"},

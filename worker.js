@@ -16,12 +16,14 @@ async function initNetwork(model, firstLayer, secondLayer, sameWeights, classifi
       model.layers[layer].setWeights([tensor,tf.zeros([b])])
     }
 
+    if (classifier){
     model.add(tf.layers.dense({ inputShape: [2], useBias: true, units: firstLayer, activation: "sigmoid" }));
     model.add(tf.layers.dense({ units: secondLayer, useBias: true, activation: "sigmoid" }));
-    if (classifier){
     model.add(tf.layers.dense({ units: 2, useBias: true, activation: "softmax" }));
     }else{
-      model.add(tf.layers.dense({ units: 1, useBias: true, activation: "softmax" }));
+    model.add(tf.layers.dense({ inputShape: [2], useBias: true, units: firstLayer, activation: "tanh" }));
+    model.add(tf.layers.dense({ units: secondLayer, useBias: true, activation: "tanh" }));
+    model.add(tf.layers.dense({ units: 1, useBias: true, activation: "tanh" }));
     }
     if (sameWeights == 0){
       let init_weights_input = tf.fill([2, firstLayer], 0.5)
@@ -36,7 +38,8 @@ async function initNetwork(model, firstLayer, secondLayer, sameWeights, classifi
       setinitWeights(firstLayer,secondLayer,1);
       setinitWeights(secondLayer,2,2);
     }   
-    model.compile({ loss: "meanSquaredError", optimizer: tf.train.adam(.01), metrics: ["accuracy"] });
+    
+    model.compile({ loss: "meanSquaredError", optimizer: tf.train.adam(.01), metrics: ["acc"] });
     return model
   }
 
@@ -54,10 +57,16 @@ async function training(model, id, trainingData, outputData,classifier) {
         let input = await model.getWeights()[0].array()
         let firstLayer = await model.getWeights()[2].array()
         let secondLayer = await model.getWeights()[4].array()
-        acc.push({ epoch: epoch, value: logs.val_loss, type: "val_loss" });
+        if (classifier){
+          acc.push({ epoch: epoch, value: logs.val_loss, type: "val_loss" });
         acc.push({ epoch: epoch, value: logs.loss, type: "loss" });
         acc.push({ epoch: epoch, value: logs.val_acc, type: "val_acc" });
         acc.push({ epoch: epoch, value: logs.acc, type: "acc" });
+      }else{
+      acc.push({ epoch: epoch, value: logs.val_loss < 0.5? logs.val_loss: 0.5, type: "val_loss" });
+      acc.push({ epoch: epoch, value: logs.loss < 0.5? logs.loss: 0.5, type: "loss" });
+    }
+
         learningRate_values = await learningRateDecay( prevLayer, input, firstLayer, secondLayer)
         learningRate.push({epoch:epoch, value:learningRate_values[0], type:"input"})
         learningRate.push({epoch:epoch, value:learningRate_values[1], type:"hidden1"})
@@ -78,7 +87,6 @@ async function training(model, id, trainingData, outputData,classifier) {
   });
   let switched_signs = await similarity([await model.getWeights()[0].array(),await model.getWeights()[2].array(),await model.getWeights()[4].array()])
   self.postMessage([id, "similarity", switched_signs])
-  console.log(await(model.predict(tf.tensor2d([[15.0,15.0],[0,0],[5,5],[-5,-5],[2,-10]])).array()))
   let time = Date.now() - startTime
 }
 
@@ -138,7 +146,7 @@ async function learningRateDecay( prevLayer, input, firstLayer, secondLayer){
   let layer_H1 =diff(prevLayer[1], firstLayer);
   let layer_H2 =diff(prevLayer[2], secondLayer);
   
-  return [layer_input,layer_H1,layer_H2]
+  return [layer_input < 0.5?layer_input:0.5,layer_H1< 0.5?layer_H1:0.5,layer_H2< 0.5?layer_H2:0.5]
 
 }
 
