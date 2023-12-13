@@ -1,6 +1,11 @@
 importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs");
 var model;
 
+let epochs = 51
+let timer_learningRate_end = 0
+let timer_showheatmap_end = 0
+let timer_similarity_end = 0
+let timer_send_end = 0
 
 async function initNetwork(model, firstLayer, secondLayer, sameWeights, classifier) {
     model = tf.sequential();
@@ -47,37 +52,51 @@ async function initNetwork(model, firstLayer, secondLayer, sameWeights, classifi
 async function training(model, id, trainingData, outputData,classifier) {
   let acc = [];
   let learningRate = [];
+  
   let prevLayer = [await model.getWeights()[0].array(), await model.getWeights()[2].array(), await model.getWeights()[4].array()]
   const startTime = Date.now();
   const h = await model.fit(trainingData, outputData, {
-    epochs: 50,
+    epochs: epochs,
     validationSplit: 0.2,
     callbacks: [{
       onEpochEnd: async (epoch, logs) => {
+        
         let input = await model.getWeights()[0].array()
         let firstLayer = await model.getWeights()[2].array()
         let secondLayer = await model.getWeights()[4].array()
+        let timer_send_start = 0
         if (classifier){
           acc.push({ epoch: epoch, value: logs.val_loss, type: "val_loss" });
         acc.push({ epoch: epoch, value: logs.loss, type: "loss" });
         acc.push({ epoch: epoch, value: logs.val_acc, type: "val_acc" });
         acc.push({ epoch: epoch, value: logs.acc, type: "acc" });
       }else{
-      acc.push({ epoch: epoch, value: logs.val_loss < 0.5? logs.val_loss: 0.5, type: "val_loss" });
-      acc.push({ epoch: epoch, value: logs.loss < 0.5? logs.loss: 0.5, type: "loss" });
+      acc.push({ epoch: epoch, value: logs.val_loss < 0.6? logs.val_loss: 0.6, type: "val_loss" });
+      acc.push({ epoch: epoch, value: logs.loss < 0.6? logs.loss: 0.6, type: "loss" });
     }
-
+        let timer_learningRate_start = performance.now()
         learningRate_values = await learningRateDecay( prevLayer, input, firstLayer, secondLayer)
         learningRate.push({epoch:epoch, value:learningRate_values[0], type:"input"})
         learningRate.push({epoch:epoch, value:learningRate_values[1], type:"hidden1"})
         learningRate.push({epoch:epoch, value:learningRate_values[2], type:"hidden2"})
         prevLayer = [input, firstLayer, secondLayer]
+        timer_learningRate_end += performance.now() - timer_learningRate_start
 
         if (epoch%2==0){
-        self.postMessage([id, "acc", acc])
-        self.postMessage([id, "lrd" , learningRate])}
+          timer_send_start = performance.now()
+          self.postMessage([id, "acc", acc])
+          self.postMessage([id, "lrd" , learningRate])}
+          timer_send_end += performance.now() - timer_send_start
         if (epoch%10 == 0){
-          showheatmap(id, input, firstLayer, secondLayer, classifier)
+          let timer_showheatmap_start = performance.now()
+          let data_weights = await showheatmap(id, input, firstLayer, secondLayer, classifier)
+          timer_showheatmap_end += performance.now() - timer_showheatmap_start
+          self.postMessage([id, "heatmap", data_weights])
+
+          let timer_similarity_start = performance.now()
+          let similarity_array = await similarity(id, [input, firstLayer, secondLayer])
+          timer_similarity_end += performance.now() - timer_similarity_start
+          self.postMessage([id, "similarity", similarity_array])
         }
         }
 
@@ -85,8 +104,7 @@ async function training(model, id, trainingData, outputData,classifier) {
       //callback
     ]
   });
-  let switched_signs = await similarity([await model.getWeights()[0].array(),await model.getWeights()[2].array(),await model.getWeights()[4].array()])
-  self.postMessage([id, "similarity", switched_signs])
+  //let switched_signs = await similarity(id, [await model.getWeights()[0].array(),await model.getWeights()[2].array(),await model.getWeights()[4].array()])
   let time = Date.now() - startTime
 }
 
@@ -95,6 +113,7 @@ async function showheatmap(id, input, firstLayer, secondLayer, classifier){
   let all_weights = [input, firstLayer, secondLayer]
   let layer_name =""
   let max_node_weight  = 0 
+  
   for (let layer = 0; layer < 3; layer++){
     let number_neurons = all_weights[layer].length;
     for (let neuron = 0; neuron < number_neurons; neuron++){
@@ -108,8 +127,8 @@ async function showheatmap(id, input, firstLayer, secondLayer, classifier){
   }
   for (let layer = 0; layer < 3; layer++){
     if (layer == 0){ layer_name = "Input Layer"}
-    else if (layer == 1){layer_name ="First Hidden Layer"}
-    else if (layer == 2){layer_name ="Second Hidden Layer"}
+    else if (layer == 1){layer_name ="First Layer"}
+    else if (layer == 2){layer_name ="Second Layer"}
     let number_neurons = all_weights[layer].length;
     for (let neuron = 0; neuron < number_neurons; neuron++){
       let weights = all_weights[layer][neuron].length;
@@ -129,7 +148,8 @@ async function showheatmap(id, input, firstLayer, secondLayer, classifier){
   else{
     data_weights.push({"layer":"Output Layer","yposition":0.5, "weight":0.7,"neuron":0});
   }
-  self.postMessage([id, "heatmap", data_weights])
+  return data_weights
+  
 }
 
 
@@ -146,11 +166,11 @@ async function learningRateDecay( prevLayer, input, firstLayer, secondLayer){
   let layer_H1 =diff(prevLayer[1], firstLayer);
   let layer_H2 =diff(prevLayer[2], secondLayer);
   
-  return [layer_input < 0.5?layer_input:0.5,layer_H1< 0.5?layer_H1:0.5,layer_H2< 0.5?layer_H2:0.5]
+  return [layer_input < 0.6?layer_input:0.6,layer_H1< 0.6?layer_H1:0.6,layer_H2< 0.6?layer_H2:0.6]
 
 }
 
-async function similarity(layers){
+async function similarity(id, layers){
 function sort_dissimilarity_revers(d2array) {
   let minimum = d2array[0].length * 2;
   let clothesthneighbour = 1;
@@ -219,6 +239,7 @@ for (let index = 0; index < iterations; index++) {
   similarity_array.push({"layerID":i, "similarity":result[2]});
 }
 }
+
 return similarity_array
 }
 
@@ -226,13 +247,25 @@ return similarity_array
 
 
   self.onmessage = async (e) => {
-    const { id, firstLayer, secondLayer, sameWeights, data, classifier} = e.data;
+    const { id, firstLayer, secondLayer, sameWeights, data, classifier, start} = e.data;
+    const time_copy = Date.now()-start
+     timer_learningRate_end = 0
+   timer_showheatmap_end = 0
+   timer_similarity_end = 0
+   timer_send_end = 0
     const trainingData = tf.tensor2d(data.map(item => [item.x, item.y]));
     //e{} -> {} after message ? 
     const outputData = classifier ? tf.tensor(data.map(item => [
       item.label == 1 ? 1 : 0,
       item.label == 2 ? 1 : 0,
     ])):tf.tensor(data.map(item => [item.label]));
+    const time_workerstart = performance.now()
     model = await initNetwork(model, firstLayer, secondLayer, sameWeights, classifier);
+    const time_workerinitNetworkend = performance.now() - time_workerstart
+    const timer_worker_train_start = performance.now()
     await training(model, id, trainingData, outputData, classifier)
+    const timer_worker_train_end = performance.now() - timer_worker_train_start
+    const timer_network = timer_worker_train_end -timer_learningRate_end-timer_showheatmap_end-timer_similarity_end
+    self.postMessage([id, "measurments", [time_copy, timer_send_end, time_workerinitNetworkend, timer_worker_train_end, timer_learningRate_end, timer_showheatmap_end, timer_similarity_end, timer_network]])
+    self.postMessage([id, "done"])
   }

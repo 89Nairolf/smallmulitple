@@ -8,13 +8,20 @@
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.5.1/dist/tfjs-vis.umd.min.js"></script>
 
 <style>
+  body{
+    background-color: #eeeeee;
+  }
+  p{font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif}
   td, th {
-  border: 1px solid #dddddd;
+  border: 1px solid #c0c0c0;
   text-align: left;
   padding: 5px;
 }
 tr:nth-child(even) {
-  background-color: #dddddd;
+  background-color: #cacaca;
+}
+option:hover{
+  cursor: pointer;
 }
   .sidebar {
     height: 100%;
@@ -41,7 +48,9 @@ tr:nth-child(even) {
   .sidebar a:hover {
     color: #f1f1f1;
   }
-
+  .closebtn{
+    margin-top: 680px;
+  }
   .openbtn {
     font-size: 20px;
     cursor: pointer;
@@ -49,6 +58,8 @@ tr:nth-child(even) {
     color: white;
     padding: 10px 15px;
     border: none;
+    position: fixed;
+    /*display: none;*/
   }
 
   .openbtn:hover {
@@ -56,12 +67,21 @@ tr:nth-child(even) {
   }
 
   .reg {display:none;}
-
+  .parameter_button{
+    cursor: pointer;
+    background-color: #ffffff;
+    border-color: #cacaca;
+  }
   #main {
     transition: margin-left .5s;
     padding: 16px;
   }
-
+  #explanation{
+    display: none;
+  }
+  #about{
+    display: none;
+  }
   @media screen and (max-height: 450px) {
     .sidebar {
       padding-top: 15px;
@@ -71,30 +91,75 @@ tr:nth-child(even) {
       font-size: 18px;
     }
   }
-
+ p{font-size: 18px;}
   #parameterdiv {
-    background-color: #b8b8b8;
+    background-color: #eeeeee;
   }
 </style>
 
 <body>
 
   <div id="mySidebar" class="sidebar">
+    <a href="javascript:void(0)" onclick="closeNavAbout()">About</a>
+    <a href="javascript:void(0)" onclick="closeNavTraining()">Training</a>
+    <a href="javascript:void(0)" onclick="closeNavExplain()">Explanation</a>
     <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
-    <a href="#">About</a>
-    <a href="#">Training</a>
-    <a href="#">Explanation</a>
   </div>
   <div id="stats"></div>
-
+  <button class="openbtn" id="openbutton" onclick="openNav()" style="font-size: 90%;">☰ Open Sidebar</button>
   <button id="openbutton" onclick="getTestResults()" style="font-size: 90%;">Tests</button>
   <button id="openbutton" onclick="showTestResults(testtime,memoryUsage)" style="font-size: 90%;">ShowTests</button>
+  
+  <div id="about">
+    <div style="margin:auto; width:30%;">
+    <h2 style="font-size: 200%;">How many Neurons do I need?</h2>
+    <p>
+      You've probably already heard of artificial intelligence. It is already being used
+      everywhere. In weather forecasting, in autonomous cars, in image processing, in 
+      medicine, in research and much more. The algorithms often remain hidden from us.
+      Now, with Chat GPT from OpenAI, an interface has been created that allows anyone 
+      to experience live interaction with an AI. But what exactly is an AI? This type
+      of intelligence describes the ability to act appropriately and proactively, to 
+      perceive sensory impressions and to react to them. The aim is to imitate human
+      behavior that learns from data. This involves so-called neurons that are 
+      connected to each other. By adding data, training and evaluating right or 
+      wrong, the connections (also known as weights) of the neurons are strengthened 
+      or weakened. The algorithm is often presented as a black box model where the 
+      user does not know how the training actually works. We want to change that!
+</p>
+      <h3>
+        From the black box to the white box model
+      </h3>
+<p>
+  Efforts have been underway for some time to make AI and neural networks more 
+  accessible to the general public. Tensorflow Playground is one such tool, which
+   was released in 2013. It allows you to train your own network on a data set 
+   and see the weights of the connections as well as how the node splits the data! 
+   Cool, right?<br>
+  Some parameters are not learned by the network and must be determined before 
+  training, the so-called hyperparameters. There are 2<sup>n</sup> possible constellations,
+   with n as the number of hyperparameters. With Tensorflow Playground, you can 
+   set a lot of parameters without being directly aware of the effects.
+</p>
+<h3>How many Neurons do I need?</h3>
+<p>
+  We deal with this question. Does more always help more? And how does this affect
+   training? In the <a href="javascript:void(0)" onclick="closeNavTraining()" >Training section</a>,
+    inside the sidebar, you have the opportunity to create 
+   your own network. We stay close to the Tensorflow Playground model, limit the
+    selection of hyperparameters and provide you with a small multiple so that you
+     can get information about the effects as well as the possibility to compare 
+     it with similar networks. A more detailed explanation of the individual 
+     graphics can be found in the <a href="javascript:void(0)" onclick="closeNavExplain()" >Analysis section</a>.
+    </p>
 
+  </div>
+  </div>
+  
   <div id="main">
-    <button class="openbtn" id="openbutton" onclick="openNav()" style="font-size: 90%;">☰ Open Sidebar</button>
-    <h2 style="text-align: center; font-size: 200%;">Tensorflow Visor</h2>
+    <h2 style="margin-left:350px; font-size: 200%;">How many Neurons do I need?</h2>
     
-    <div id="parameterdiv" style="display: flex; margin: 0px 0px 0px 50px;">
+    <div id="parameterdiv" style="display: flex; margin: 0px 0px 0px 150px;">
       <div id="dataplot" style="height:200px; width: 250px; margin-right:50px"></div>
       <div id="parameters">
         <label>Type of Network: </label>
@@ -118,9 +183,10 @@ tr:nth-child(even) {
           <option value="weights_equal">All values are equal</option>
           <option value="weights_set">Prescribed values</option>
         </select><br>
-        <label>Add/Remove Number of Networks: </label><button onclick="addNetwork()">+</button><button
-        onclick="removeNetwork()">-</button><br>
-      <button onclick="startTraining2(workerlist)">Train Network</button><br>
+        <label>Add/Remove Number of Networks: </label>
+        <button class="parameter_button" onclick="addNetwork()">+</button>
+        <button class="parameter_button" onclick="removeNetwork()">-</button><br>
+      
         <table id="table">
           <tr>
             <th>Layer: </th>
@@ -130,62 +196,223 @@ tr:nth-child(even) {
             <th>Output</th>
           </tr>
 
-        </table>
-
+        </table><br>
+        <button onclick="startTraining2()">Train Network</button><br>
       </div>
     </div>
-
-
-    <div id="graph_section" style="margin-left: 300px;">
+    <div id="graph_section" style="margin: 0 200px;">
       <p id="trainingOnData" style="margin-top:50px;"></p>
-      <!--
-      <div style="width:40%">
-        <div id="plot3"></div>
-        <div id="plot4"></div>
-        <div id="plot5"></div>
-        <div id="plot6"></div>
-        <div id="plot7"></div>
-      </div>
-      <div style="width:40%">
-        <div id="plot23"></div>
-        <div id="plot24"></div>
-        <div id="plot25"></div>
-        <div id="plot26"></div>
-        <div id="plot27"></div>
-      </div>
-    -->
+    </div>
+  </div>
+
+  <div id="explanation">
+    <div style="margin:0 auto; width:30%">
+      <h2 style="font-size: 200%;">How many Neurons do I need?</h2>
+      <p>
+        So many charts at once, but what can you learn from them? 
+        In the following, we will take a closer look at the individual charts.
+       We will first explain the hyperparameters and then the charts from left to right.
+      </p>
+      
+    <h2>Hyperparameter</h2>
+    <h3>Networktype</h3>
+    <p>
+    There are two types of problems we can solve here. We have a classifier 
+    problem where a data point belongs to exactly one class. In our two 
+    dimensional data set there are the x and y coordinates, which are also 
+    the input values in the network. In classification, the network must 
+    output a class that has the highest probability. In regression, there 
+    are no classes and an attempt is made to calculate a computed value based 
+    on the available data. Therefore, there is only one output value here.
+</p>
+    <div class="example">
+      Classification,
+      Regression,
+  
+    </div>
+  
+    <h3>Weights</h3>
+  <p>
+    Random values are often used because you don't know which paths the 
+    network will prioritize. This means that with a bit of luck a solution 
+    can be found quickly, with bad luck none. For the reproduction of networks,
+     it is possible to determine the weights yourself with fixed values. 
+     However, if all values are the same, the network will not improve the
+      symmetry ensures that all values have the same input and output and 
+      the network is not trained, thus all neurons remain the same except 
+      for the input layerwise. </p>
+
+    <div class="example">
+      Random, one good, one bad
+      All equal - weights of Neurons, Pariwise similarity
+    </div>
+    
+    <h2>Chart Explanation</h2>
+   <h3>Training process</h3>
+  <p>   
+  In the training process, the data set is divided into training data 
+  and validation data. The first is used to train the network and the
+  second is used to validate the network. An iteration is called an 
+  epoch. The accuracy indicates how often the label (the class to which 
+  the data point belongs) was correctly recognized during the training.
+  The value 1 reflects 100% correctness in the prediction. The loss 
+  function is calculated from the Output Result. This allows us to 
+  evaluate and compare different networks. The closer the value is 
+  to 0, the closer we are to a good network. We used the meanSquaredError
+  loss function, where small deviations have little influence, while 
+  large deviations have a large influence. The validation value for 
+  accuracy and loss indicates how well the network reacts to a data 
+  set on which it has not been trained. 
+  
+    No accuracy is specified for regression, as there are no classes
+    respectively an infinite number of classes.
+  </p>
+  <div class="example">
+    Classification - good
+    weniger Neuronen möglich?
+    Classification - bad
+    mehr Neuron testen, bzw mit neuen Random Variablen probieren
+    Regression - good
+    Regression - bad
+  </div>
+  
+  <h3>Weights of Neurons</h3>
+  <p>
+    This graph shows you the total sum of all outgoing connections 
+    of a neuron in relation to the most influential neuron in the 
+    network, which amplifies the input that leads to a good output. 
+    Note that the output layer has no weights and has been assigned 
+    the value 0.7 for the graphical completeness of a network. 
+    Furthermore, the individual edges have been omitted to provide 
+    a better overview.
+  
+  
+  </p>
+  <div class="example">
+    Due to the independence of the coordinates in the Classification - 
+    circle problem, we expect them to be approximately the same size. 
+    If the coordinates are dependent as in the Classification - Gaussian
+     problem, where a positive coordinate automatically has a unique 
+     label, we expect different sizes.
+  
+    Too many neurons in the subsequent layer can cause us to have two 
+    neurons there that have learned the same thing, strengthen the same 
+    neurons in the previous layer, but both remain the same size due to
+     the equality.
+    
+    Neurons are changed in the process of backpropagation depending on
+   their previous weight. If this is small from the start small from
+    the beginning, it can also have a smaller influence later on. This
+    neuron can be neglected, as other neurons have found a different
+   path/dependency.
+  </div>
+
+  <h3>Average Learning Rate Change</h3>
+  <p> 
+    The learn rate describes the difference in total weights between two epochs.
+    The layers are added together and the average is calculated. If the learning 
+    rate is high, the network learns more in the epoch than if it is low. The 
+    learning rate increases due to the learning rate modifier and approaches
+    zero. With our data, a good network should only give one output/training
+    process, otherwise adding another neuron could help.
+
+  </p>
+  
+    <div class="example">
+      In this graph, we can see that layers followed by a layer with many 
+      neurons learn faster than layers with fewer neurons following them.
+      This is due to the fact that in the backpropagation many neurons 
+      adapt quickly and learn the same thing. This then adds up in the layer
+      before it, which causes the learning rate to swing. 
+  </div>
+  <h3>Pairwise Similarity</h3>
+  <p>
+    The Pairwise Similarity compares the percentage distribution of the 
+    weights to the next layer with other neurons in the layer. This removes
+     the weight factor for each layer. As an example, [0,1] and [0,1] are 
+     shown as identical with the value 1. The example [1,0] and [0,1] with
+      0, and [0,1] and [1,1] with 0.5. The similarity was divided into ten bins.
+  
+  </p>
+  <div class="example">
+    For networks where all values are identical, all neurons in the same layer 
+    are identical.  
+  
+    For independent coordinates, the input neurons should be very different 
+    while dependency coordinates should be similar. Here we also see that many 
+    neurons in the first and second layer are identical. Manually, one could 
+    merge almost identical neurons to make the prediction of new data points 
+    more favorable in terms of computational performance.
+  </div>
+  
+  <p>
+  In conclusion, a high number of similar neurons can accelerate the training
+  process. However, this should not be too large, as the computing power 
+  increases significantly in a fully connected network. Real world data is
+  usually much more complex and requires larger networks. Networks that work
+  on MNIST have an input of 28x28 pixels and 60,000 training samples.
+</p>
     </div>
   </div>
 
   <script>
+    let case_num = 0;
+    let tests_aktiv = false;
+    let testrunname =""
+    let testarray = []
+    let test_iterations = 2;
+    let testtime =[];
+    let memoryUsage=[];
+    let timeInitWorker=[];
+    let timeInitNetwork=[];
+    let time_copy  =0
+    let timer_send_end  =0
+    let time_workerinitNetworkend =0
+    let timer_worker_train_end =0
+    let timer_learningRate_end =0
+    let timer_showheatmap_end =0
+    let timer_similarity_end =0
+    let timer_network =0
+    let timer_plot=0
+    let max_heap = 0
+    let average_heap = 0
+    
+
+
+    
     let workerlist = [];
-    let test_iterations = 1;
-let testtime =[];
-let memoryUsage=[];
-let sameWeights = 2;
-let classifier = true;
+    let sameWeights = 2;
+    let classifier = true;
     let firstValueNeurons = [];
     let secondValueNeurons = [];
     let currentlytraining = false;
+    let trainingCounterDone = 0;
+
     function addNetwork() {
       let networks = document.getElementById("graph_section").childElementCount;
       if (networks < 5) {
         //prepare container for graphs
         let container = document.createElement("DIV");
         container.setAttribute("id", "graph_block_" + networks)
-        container.style.backgroundColor = "#616161";
+        container.style.backgroundColor = "#eeeeee";
         container.style.height = "240px";
         container.style.display = "flex";
+        container.style.padding = "auto";
         document.getElementById("graph_section").appendChild(container);
+        let networkdescription = document.createElement("p");
+        networkdescription.innerText = "Network " + networks;
+        networkdescription.style.width = "100px";
+        networkdescription.style.margin = "auto 20px";
+        document.getElementById("graph_block_" + networks).appendChild(networkdescription);
         let acc_val = document.createElement("DIV");
         acc_val.setAttribute("id", "acc_val" + networks);
         acc_val.style.height = "240px";
-        acc_val.style.width = "320px";
+        acc_val.style.width = "330px";
         document.getElementById("graph_block_" + networks).appendChild(acc_val);
         let network = document.createElement("DIV");
         network.setAttribute("id", "network_" + networks);
         network.style.height = "240px";
-        network.style.width = "270px";
+        network.style.width = "280px";
         document.getElementById("graph_block_" + networks).appendChild(network);
         let lrdgraph = document.createElement("DIV");
         lrdgraph.setAttribute("id", "lrd_" + networks);
@@ -249,6 +476,23 @@ let classifier = true;
       document.getElementById("openbutton").style.visibility = "visible";
     }
 
+    function closeNavAbout(){  
+      $('#main').css("display", "none");
+      $('#explanation').css("display", "none");
+      $('#about').css("display","inline");
+}
+    function closeNavTraining(){
+      $('#explanation').css("display", "none");
+      $('#about').css("display", "none");
+      $('#main').css("display","inline");
+      closeNav();}
+    function closeNavExplain(){
+      $('#main').css("display", "none");
+      $('#about').css("display", "none");
+      $('#explanation').css("display","inline");
+
+    }
+
     $("#dataset_select").change(function () {
       selectData(this.value)
     });
@@ -304,6 +548,7 @@ let classifier = true;
         regressionGaus();
       }
       drawDataPlot()
+      schuffleData();
       //load new data
     }
 
@@ -452,6 +697,7 @@ let classifier = true;
     }
 
     function schuffleData() {
+
       for (var i = points.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         var temp = points[i];
@@ -459,6 +705,7 @@ let classifier = true;
         points[j] = temp;
       }
     }
+    
     function regressionGaus(){
       let gaussians = [
         [-7,4,1],
@@ -487,19 +734,7 @@ let classifier = true;
         points.push({x:x, y:y, label:label})
       }
     }
-    classifyCircleData();
-
-    //plot circle data
-
-    //function tfPlot(values, surface) {
-    ////tfvis.render.scatterplot(surface,
-    //{values:[Object.values(values).slice(0, numSamples/2), Object.values(values).slice(numSamples/2+1,numSamples)],
-    //series:['1','-1']},
-    //{xLabel:'x', yLabel:'y',});
-    //}
-    //tfPlot(points, plot);
-
-    schuffleData();
+    
     function drawDataPlot(){
     let dataSpec
     if ($("#networktype").val() == "classification"){
@@ -514,6 +749,8 @@ let classifier = true;
       "title":"Current Dataset",
       "width": 150,
       "height": 150,
+      "background": "#eeeeee",
+      "view": {"fill": "#f9f9f9"},
       "encoding": {
         "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"},"scale":{"domain":[-10,10]} },
         "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"},"scale":{"domain":[-10,10]} },
@@ -544,6 +781,8 @@ let classifier = true;
       "title":"Current Dataset",
       "width": 150,
       "height": 150,
+      "background": "#eeeeee",
+      "view": {"fill": "#f9f9f9"},
       "encoding": {
         "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"},"scale":{"domain":[-10,10]} },
         "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"},"scale":{"domain":[-10,10]} },
@@ -556,72 +795,85 @@ let classifier = true;
       },}
     }
 
-    vegaEmbed("#dataplot", dataSpec);
+    vegaEmbed("#dataplot", dataSpec, {renderer: "svg", actions:false});
   }
 
-  drawDataPlot()
-
-
-    const trainingData = tf.tensor2d(points.map(item => [item.x, item.y]));
-    const outputData = tf.tensor(points.map(item => [
+  let trainingData = []
+  let outputData = []
+  function convertdata (){
+    trainingData = tf.tensor2d(points.map(item => [item.x, item.y]));
+    if (classifier){
+    outputData = tf.tensor(points.map(item => [
       item.label == 1 ? 1 : 0,
       item.label == 2 ? 1 : 0,
-    ]));
-
-
+    ]));}
+    else{
+      outputData = tf.tensor(points.map(item => [item.label]))
+    }
+  }
+ classifyCircleData();
+schuffleData();
+drawDataPlot()
+convertdata()
 
     // convert input
     // Create a Tensorflow Model
     const bias = true;
   
-    function initNetwork(networkName, firstLayer, secondLayer, sameWeights) {
-      function setinitWeights(a,b,layer){
-        let weight_array = []
-        for (let index_a = 0; index_a < a; index_a++){
-          for (let index_b = 0; index_b < b; index_b++){
-            weight_array.push((1+index_b)/b)
-            //weight_array.push((1+index_a)/a)  
-          }
+    async function initNetwork(model, firstLayer, secondLayer, sameWeights, classifier) {
+    model = tf.sequential();
+
+    function setinitWeights(a,b,layer){
+      let weight_array = []
+      for (let index_a = 0; index_a < a; index_a++){
+        for (let index_b = 0; index_b < b; index_b++){
+          weight_array.push((1+index_b)/b)
         }
-        let tensor = tf.tensor(weight_array,[a,b])
-        networkName.layers[layer].setWeights([tensor,tf.zeros([b])])
       }
-      networkName.add(tf.layers.dense({ inputShape: [2], useBias: bias, units: firstLayer, activation: "sigmoid" }));
-      networkName.add(tf.layers.dense({ units: secondLayer, useBias: bias, activation: "sigmoid" }));
-      networkName.add(tf.layers.dense({ units: 2, useBias: bias, activation: "softmax" }));
-      if (sameWeights == 0){
-        let init_weights_input = tf.fill([2, firstLayer], 0.5)
-        let init_weights_first = tf.fill([firstLayer, secondLayer], 0.5)
-        let init_weights_second = tf.fill([secondLayer, 2], 0.5)
-        networkName.layers[0].setWeights([init_weights_input,tf.zeros([firstLayer])])
-        networkName.layers[1].setWeights([init_weights_first,tf.zeros([secondLayer])])
-        networkName.layers[2].setWeights([init_weights_second,tf.zeros([2])])
-      }
-      else if (sameWeights == 1){
-        setinitWeights(2,firstLayer,0);
-        setinitWeights(firstLayer,secondLayer,1);
-        setinitWeights(secondLayer,2,2);
-      }
-      
-      networkName.compile({ loss: "meanSquaredError", optimizer: tf.train.adam(.01), metrics: ["accuracy"] });
-      //model.compile({loss:'meanSquaredError', optimizer:tf.train.sgd(.01)}); SGD not working?!
+      let tensor = tf.tensor(weight_array,[a,b])
+      model.layers[layer].setWeights([tensor,tf.zeros([b])])
     }
 
-    // Start Training
+    if (classifier){
+    model.add(tf.layers.dense({ inputShape: [2], useBias: true, units: firstLayer, activation: "sigmoid" }));
+    model.add(tf.layers.dense({ units: secondLayer, useBias: true, activation: "sigmoid" }));
+    model.add(tf.layers.dense({ units: 2, useBias: true, activation: "softmax" }));
+    }else{
+    model.add(tf.layers.dense({ inputShape: [2], useBias: true, units: firstLayer, activation: "tanh" }));
+    model.add(tf.layers.dense({ units: secondLayer, useBias: true, activation: "tanh" }));
+    model.add(tf.layers.dense({ units: 1, useBias: true, activation: "tanh" }));
+    }
+    if (sameWeights == 0){
+      let init_weights_input = tf.fill([2, firstLayer], 0.5)
+      let init_weights_first = tf.fill([firstLayer, secondLayer], 0.5)
+      let init_weights_second = tf.fill([secondLayer, 2], 0.5)
+      model.layers[0].setWeights([init_weights_input,tf.zeros([firstLayer])])
+      model.layers[1].setWeights([init_weights_first,tf.zeros([secondLayer])])
+      model.layers[2].setWeights([init_weights_second,tf.zeros([2])])
+    }
+    else if (sameWeights == 1){
+      setinitWeights(2,firstLayer,0);
+      setinitWeights(firstLayer,secondLayer,1);
+      setinitWeights(secondLayer,2,2);
+    }   
+    
+    model.compile({ loss: "meanSquaredError", optimizer: tf.train.adam(.01), metrics: ["acc"] });
+    return model
+  }
 
-
-
-
-    async function training(model, network_index, input, layer1, layer2, output) {
+    async function training(model, network_index, classifier) {
       let acc = [];
       let plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "A simple scatter plot to display circle data.",
-        "background": "#FEFEFE",
+        
         "title": "Traing process",
+        "background": "#eeeeee",
+      
         "vconcat": [{
-          "width": 125,
-          "height": 125,
+          "view": {"fill": "#f9f9f9"},
+          "width": 150,
+          "height": 150,
           "data": {
             "values": acc,
           },
@@ -639,11 +891,6 @@ let classifier = true;
             },
             "title":"Training Values",
           }
-              //"color": {
-              //  "legend": { "title": "Legend" },
-              //  "field": "type",
-              //  "type": "nominal"
-              //}
             }
           },
           {
@@ -676,289 +923,199 @@ let classifier = true;
         ]
       }
 
-      let wzerocounter = [];
-      let wzerocounter1 = [];
-      let wzerocounter2 = [];
-      let wzerocounter3 = [];
-      let bzerocounter = [];
-      let bzerocounter1 = [];
-      let bzerocounter2 = [];
-      let bzerocounter3 = [];
+      async function learningRateDecay( prevLayer, input, firstLayer, secondLayer){
+  function diff(prevLayer, actLayer){
+    let lRateDecay = 0;
+    for (let i = 0; i< actLayer.length; i++){
+      for (let j = 0;j<actLayer[0].length;j++){
+      lRateDecay += Math.abs(prevLayer[i][j]-actLayer[i][j]);
+    }}
+    return (lRateDecay/actLayer.length)
+  }
+  let layer_input = diff(prevLayer[0], input);
+  let layer_H1 =diff(prevLayer[1], firstLayer);
+  let layer_H2 =diff(prevLayer[2], secondLayer);
+  return [layer_input < 0.6?layer_input:0.6,layer_H1< 0.6?layer_H1:0.6,layer_H2< 0.6?layer_H2:0.6]
 
+}
+
+async function showheatmap(id, input, firstLayer, secondLayer, classifier){
+  let data_weights = []; 
+  let all_weights = [input, firstLayer, secondLayer]
+  let layer_name =""
+  let max_node_weight  = 0 
+  for (let layer = 0; layer < 3; layer++){
+    let number_neurons = all_weights[layer].length;
+    for (let neuron = 0; neuron < number_neurons; neuron++){
+      let weights = all_weights[layer][neuron].length;
+      let weight_sum = 0;
+      for (let weight = 0; weight < weights; weight++){
+        weight_sum += Math.abs(all_weights[layer][neuron][weight]);
+      } 
+      if (weight_sum > max_node_weight){max_node_weight = weight_sum}
+    } 
+  }
+  for (let layer = 0; layer < 3; layer++){
+    if (layer == 0){ layer_name = "Input Layer"}
+    else if (layer == 1){layer_name ="First Layer"}
+    else if (layer == 2){layer_name ="Second Layer"}
+    let number_neurons = all_weights[layer].length;
+    for (let neuron = 0; neuron < number_neurons; neuron++){
+      let weights = all_weights[layer][neuron].length;
+      let weight_sum = 0;
+      for (let weight = 0; weight < weights; weight++){
+        weight_sum += Math.abs(all_weights[layer][neuron][weight]);
+      }
+      let scaled_weight_sum = weight_sum/max_node_weight
+      let yposition = ((neuron+1)/(number_neurons+1));
+      data_weights.push({"layer":layer_name,"yposition":yposition, "weight":scaled_weight_sum,"neuron":neuron})
+    }
+
+  }
+  if (classifier){
+  data_weights.push({"layer":"Output Layer","yposition":0.33, "weight":0.7,"neuron":0});
+  data_weights.push({"layer":"Output Layer","yposition":0.67, "weight":0.7,"neuron":1});}
+  else{
+    data_weights.push({"layer":"Output Layer","yposition":0.5, "weight":0.7,"neuron":0});
+  }
+  plot_heat(id, data_weights)
+
+}
+async function similarity(id, layers){
+function sort_dissimilarity_revers(d2array) {
+  let minimum = d2array[0].length * 2;
+  let clothesthneighbour = 1;
+  let d2arraylen = d2array.length;
+  let d2outarraylen = d2array[0].length;
+  let reverse = false;
+  for (let outarray = 1; outarray < d2arraylen; outarray++) {
+    let euklidsum = 0;
+    let euklidsum_revers = 0;
+    for (let inarray = 0; inarray < d2outarraylen; inarray++) {
+      euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]);
+      euklidsum_revers += Math.abs(d2array[0][inarray] + d2array[outarray][inarray]);
+    }
+    if (euklidsum < euklidsum_revers) {
+      if (euklidsum < minimum) {
+        minimum = euklidsum;
+        clothesthneighbour = outarray;
+        reverse = false;
+      }
+    }
+    else if (euklidsum_revers < minimum) {
+      minimum = euklidsum_revers;
+      clothesthneighbour = outarray;
+      reverse = true;
+    }
+  }
+  let scaled_minimum = Math.floor(10*(1-(minimum/d2outarraylen)))/10
+  return [clothesthneighbour, reverse, scaled_minimum.toString()]
+}
+
+function scaleData(predata){
+//scale down to 1max
+//create 1D array with max/min
+let maxRow = predata.map(function (row) { return Math.max.apply(Math, row); });
+let minRow = predata.map(function (row) { return Math.min.apply(Math, row); });
+let max_row_length = maxRow.length;
+var scaleddata = [];
+//scale with Math.max(maxRow, Math.abs(minRow))
+for (let i = 0; i < max_row_length; i++) {
+  if (Math.abs(maxRow[i]) > Math.abs(minRow[i])) {
+    var scale = Math.abs(maxRow[i]);
+  }
+  else {
+    var scale = Math.abs(minRow[i]);
+  }
+  var helper = predata[i].map(x => x / scale);
+  scaleddata.push(helper);
+}
+return scaleddata
+}
+
+let similarity_array = []
+for (let i = 0; i < layers.length; i++){
+let switched_signs = scaleData(layers[i]);
+let iterations = switched_signs.length - 1;
+for (let index = 0; index < iterations; index++) {
+  var result = sort_dissimilarity_revers(switched_signs.slice(index, switched_signs.length));
+  if (result[0] != 1) {
+    let rowhelper3 = switched_signs[result[0] + index];
+    switched_signs[result[0] + index] = switched_signs[index + 1];
+    switched_signs[index + 1] = rowhelper3;
+  }
+  if (result[1]) {
+    switched_signs[index + 1] = await switched_signs[index + 1].map(el => -el);
+  }
+  similarity_array.push({"layerID":i, "similarity":result[2]});
+}
+}
+plot_similarity(id, similarity_array)
+}
+
+      let learningRate = [];
+      let prevLayer = [await model.getWeights()[0].array(), await model.getWeights()[2].array(), await model.getWeights()[4].array()]
 
       let networkID = document.getElementById("acc_val" + (network_index + 1));
-      //const callback = tfvis.show.fitCallbacks(surface_fit, ['loss', 'val_loss', 'acc', 'val_acc'], { callbacks: ['onEpochEnd'], zoomToFitAccuracy: true });
-      const startTime = Date.now();
+    const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 20,
+        epochs: 10,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
           onEpochEnd: async (epoch, logs) => {
-            //logs.epoch = epoch;
-            //acc.push(logs);
-            acc.push({ epoch: epoch, value: logs.val_loss, type: "val_loss" });
-            acc.push({ epoch: epoch, value: logs.loss, type: "loss" });
-            acc.push({ epoch: epoch, value: logs.val_acc, type: "val_acc" });
-            acc.push({ epoch: epoch, value: logs.acc, type: "acc" });
-            vegaEmbed(networkID, plot3);
-            if (epoch % 10 == 0) {
-            showheatmap(network_index);}
-            var counter = 0;
-            var wcounter1 = 0;
-            var wcounter2 = 0;
-            var wcounter3 = 0;
-            var weigthsLayer0 = await model.getWeights()[0].array();
-            var weigthsLayer1 = await model.getWeights()[2].array();
-            var weigthsLayer2 = await model.getWeights()[4].array();
+            let input = await model.getWeights()[0].array()
+        let firstLayer = await model.getWeights()[2].array()
+        let secondLayer = await model.getWeights()[4].array()
+        if (classifier){
+          acc.push({ epoch: epoch, value: logs.val_loss, type: "val_loss" });
+        acc.push({ epoch: epoch, value: logs.loss, type: "loss" });
+        acc.push({ epoch: epoch, value: logs.val_acc, type: "val_acc" });
+        acc.push({ epoch: epoch, value: logs.acc, type: "acc" });
+      }else{
+      acc.push({ epoch: epoch, value: logs.val_loss < 0.6? logs.val_loss: 0.6, type: "val_loss" });
+      acc.push({ epoch: epoch, value: logs.loss < 0.6? logs.loss: 0.6, type: "loss" });
+    }
 
-            for (node of weigthsLayer0) {
-              for (weights of node) {
-                if (Math.abs(weights) < 0.1) {
-                  counter++;
-                  wcounter1++;
-                }
-              }
-            }
-            for (node of weigthsLayer1) {
-              for (weights of node) {
-                if (Math.abs(weights) < 0.1) {
-                  counter++;
-                  wcounter2++;
-                }
-              }
-            }
-            for (node of weigthsLayer2) {
-              for (weights of node) {
-                if (Math.abs(weights) < 0.1) {
-                  counter++;
-                  wcounter3++;
-                }
-              }
-            }
-            wzerocounter.push(counter);
-            wzerocounter1.push(wcounter1);
-            wzerocounter2.push(wcounter2);
-            wzerocounter3.push(wcounter3);
+        learningRate_values = await learningRateDecay( prevLayer, input, firstLayer, secondLayer)
+        learningRate.push({epoch:epoch, value:learningRate_values[0], type:"input"})
+        learningRate.push({epoch:epoch, value:learningRate_values[1], type:"hidden1"})
+        learningRate.push({epoch:epoch, value:learningRate_values[2], type:"hidden2"})
+        prevLayer = [input, firstLayer, secondLayer]
 
-            var bcounter = 0;
-            var bcounter1 = 0;
-            var bcounter2 = 0;
-            var bcounter3 = 0;
-            var biasLayer1 = await model.getWeights()[1].array();
-            var biasLayer2 = await model.getWeights()[3].array();
-            var biasLayer3 = await model.getWeights()[5].array();
-            for (node of biasLayer1) {
-              if (Math.abs(node) < 0.1) {
-                bcounter++;
-                bcounter1++;
-              }
-            }
-            for (node of biasLayer2) {
-              if (Math.abs(node) < 0.1) {
-                bcounter++;
-                bcounter2++;
-              }
-            }
-            for (node of biasLayer3) {
-              if (Math.abs(node) < 0.1) {
-                bcounter++;
-                bcounter3++;
-              }
-            }
-            bzerocounter.push(bcounter);
-            bzerocounter1.push(bcounter1 / layer1);
-            bzerocounter2.push(bcounter2 / layer2);
-            bzerocounter3.push(bcounter3 / output);
-            //model.layers[0].getWeights()[0].forEach(function(weight) {
-            //});
-            //console.log(`Epoch ${epoch + 1}:  : counter${counter} `);
+        if (epoch%2==0){
+        plot_training(network_index, acc)
+        plot_lrd(network_index, learningRate)
+        }
+        if (epoch%10 == 0){
+          showheatmap(network_index, input, firstLayer, secondLayer, classifier)
 
-
-
-          }
+          similarity(network_index, [input, firstLayer, secondLayer])
+        }
+        }
         },
           //callback
         ]
       });
-      console.log(Date.now() - startTime);
 
-      var number_weights = input * layer1 + layer1 * layer2 + layer2 * output
-
-      var number_bias = layer1 + layer2 + output
-      var zerofraction = wzerocounter.map(y => y / number_weights).map((y, x) => ({ x, y, }));
-      var zerofraction1 = wzerocounter1.map(y => y / (input * layer1)).map((y, x) => ({ x, y, }));
-      var zerofraction2 = wzerocounter2.map(y => y / (layer1 * layer2)).map((y, x) => ({ x, y, }));
-      var zerofraction3 = wzerocounter3.map(y => y / (layer2 * output)).map((y, x) => ({ x, y, }));
-      var bzerofraction = bzerocounter.map(y => y / number_bias).map((y, x) => ({ x, y, }));
-      var bzerofraction1 = bzerocounter1.map(y => y / layer1).map((y, x) => ({ x, y, }));
-      var bzerofraction2 = bzerocounter2.map(y => y / layer2).map((y, x) => ({ x, y, }));
-      var bzerofraction3 = bzerocounter3.map(y => y / output).map((y, x) => ({ x, y, }));
-
-
-
-
-      // Render Graphs
-      /**tfvis.render.linechart(surface_weight, {
-        values: [zerofraction, zerofraction1, zerofraction2, zerofraction3], series: ['all', '1', '2', '3']
-      }, {
-        xLabel: 'epoch',
-        yLabel: '#fraction of weights < 0.1',
-        yAxisDomain: [0, 1]
-      }
-      );
-      tfvis.render.linechart(surface_bias, {
-        values: [bzerofraction, bzerofraction1, bzerofraction2, bzerofraction3], series: ['all', '1', '2', '3']
-      },
-        {
-          xLabel: 'epoch',
-          yLabel: '#fraction of bias < 0.1',
-          yAxisDomain: [0, 1]
-        }
-      );
-**/
-      //scale to 1, compare for equality, show how many are similar. headmap
-
-      //scale independitly
-
-
-      let predata0 = await (model.getWeights()[2].array());
-      let maxRow = predata0.map(function (row) { return Math.max.apply(Math, row); });
-      let minRow = predata0.map(function (row) { return Math.min.apply(Math, row); });
-      let max_row_length = maxRow.length;
-      var scaleddata0 = [];
-      for (let i = 0; i < max_row_length; i++) {
-        if (Math.abs(maxRow[i]) > Math.abs(minRow[i])) {
-          var scale = Math.abs(maxRow[i]);
-        }
-        else {
-          var scale = Math.abs(minRow[i]);
-        }
-        var helper = predata0[i].map(x => x / scale);
-        scaleddata0.push(helper);
-
-      }
-
-      function sort_dissimilarity(d2array, quad) {
-        let minimum = firstValueNeurons;
-        let clothesthneighbour = 1;
-        let d2arraylen = d2array.length;
-        let d2outarraylen = d2array[0].length;
-        for (let outarray = 1; outarray < d2arraylen; outarray++) {
-          let euklidsum = 0
-          for (let inarray = 0; inarray < d2outarraylen; inarray++) {
-            if (quad) {
-              euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]) ** 4;
-            } else {
-              euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]);
-            }
-          }
-          if (euklidsum < minimum) {
-            minimum = euklidsum;
-            clothesthneighbour = outarray;
-          }
-        }
-
-        return clothesthneighbour
-      }
-
-      function sort_dissimilarity_revers(d2array) {
-        let minimum = firstValueNeurons * 2;
-        let clothesthneighbour = 1;
-        let d2arraylen = d2array.length;
-        let d2outarraylen = d2array[0].length;
-        let reverse = false;
-        for (let outarray = 1; outarray < d2arraylen; outarray++) {
-          let euklidsum = 0;
-          let euklidsum_revers = 0;
-          for (let inarray = 0; inarray < d2outarraylen; inarray++) {
-            euklidsum += Math.abs(d2array[0][inarray] - d2array[outarray][inarray]);
-            euklidsum_revers += Math.abs(d2array[0][inarray] + d2array[outarray][inarray]);
-          }
-          if (euklidsum < euklidsum_revers) {
-            if (euklidsum < minimum) {
-              minimum = euklidsum;
-              clothesthneighbour = outarray;
-              reverse = false;
-            }
-          }
-          else if (euklidsum_revers < minimum) {
-            minimum = euklidsum_revers;
-            clothesthneighbour = outarray;
-            reverse = true;
-          }
-        }
-
-        return [clothesthneighbour, reverse]
-      }
-
-
-      let helparray = scaleddata0;
-      var quaddata = scaleddata0;
-      var switched_signs = scaleddata0;
-      let iterations = scaleddata0.length - 1;
-      for (let index = 0; index < iterations; index++) {
-        var exchange_with = sort_dissimilarity(helparray.slice(index, helparray.length), false);
-        if (exchange_with != 1) {
-          var rowhelper = scaleddata0[exchange_with + index];
-          scaleddata0[exchange_with + index] = scaleddata0[index + 1];
-          scaleddata0[index + 1] = rowhelper;
-
-        }
-      }
-      //tfvis.render.heatmap(surface_heat, { values: scaleddata0 });
-
-      for (let index = 0; index < iterations; index++) {
-        var exchange_with_quad = sort_dissimilarity(quaddata.slice(index, quaddata.length), true);
-        if (exchange_with_quad != 1) {
-          let rowhelper2 = quaddata[exchange_with_quad + index];
-          quaddata[exchange_with_quad + index] = quaddata[index + 1];
-          quaddata[index + 1] = rowhelper2;
-        }
-      }
-      //tfvis.render.heatmap(surface_quad_dis, { values: quaddata });
-      for (let index = 0; index < iterations; index++) {
-        var result = sort_dissimilarity_revers(switched_signs.slice(index, switched_signs.length));
-        if (result[0] != 1) {
-          let rowhelper3 = switched_signs[result[0] + index];
-          switched_signs[result[0] + index] = switched_signs[index + 1];
-          switched_signs[index + 1] = rowhelper3;
-        }
-        if (result[1]) {
-          switched_signs[index + 1] = await switched_signs[index + 1].map(el => -el);
-        }
-      }
-      //tfvis.render.heatmap(surface_abs, { values: switched_signs });
-
-
-      var data1 = await (model.getWeights()[2].array());
-      const maxdata1 = Math.max(...data1);
-      var data2 = await (model.getWeights()[4].array());
-      const maxdata2 = Math.max(...data2);
-      ////tfvis.render.heatmap(surface_heat, {values:scaleddata0})
-      //other headmaps too
-      ////tfvis.render.heatmap(surface_abs,{values:switched_signs});
-      ////tfvis.render.heatmap(surface_quad_dis,{values:quaddata});
-      //abs -> sort_dis.. if distance to big, row*(-1)
-
-      //model.summary();
-      //model_training[network_index]=0;
-      await showheatmap(network_index);
     }
 
 
     function plot_training(id, acc){
+      let timer_plot_start = performance.now()
       let networkID = document.getElementById("acc_val"+(id+1));
       let plot3
       if ($("#networktype").val() == "classification"){
       plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "description": "A simple scatter plot to display circle data.",
-        "background": "#FEFEFE",
+        "description": "Display of trainingsprocess.",
+        "background": "#eeeeee",
+      
         "title": "Traing process",
         "vconcat": [{
-          "width": 125,
-          "height": 125,
+          "view": {"fill": "#f9f9f9"},
+          "width": 150,
+          "height": 150,
           "data": {
             "values": acc,
           },
@@ -976,11 +1133,6 @@ let classifier = true;
             },
             "title":"Training Values",
           }
-              //"color": {
-              //  "legend": { "title": "Legend" },
-              //  "field": "type",
-              //  "type": "nominal"
-              //}
             }
           },
           {
@@ -1017,11 +1169,13 @@ let classifier = true;
         plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "A simple scatter plot to display circle data.",
-        "background": "#FEFEFE",
+        "background": "#eeeeee",
+      
         "title": "Traing process",
         "vconcat": [{
-          "width": 125,
-          "height": 125,
+          "view": {"fill": "#f9f9f9"},
+          "width": 150,
+          "height": 150,
           "data": {
             "values": acc,
           },
@@ -1039,11 +1193,6 @@ let classifier = true;
             },
             "title":"Training Values",
           }
-              //"color": {
-              //  "legend": { "title": "Legend" },
-              //  "field": "type",
-              //  "type": "nominal"
-              //}
             }
           },
           {
@@ -1074,22 +1223,25 @@ let classifier = true;
         ]
       }
       }
-      vegaEmbed(networkID, plot3);
+      vegaEmbed(networkID, plot3, {renderer: "svg", actions:false});
+      timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
   //}
 
     //function plot_heat(networks, data_weights, epoch){
     function plot_heat(id, data_weights){
     //for (let i = 0; i < networks; i++){
+    let timer_plot_start = performance.now()
     let networkIDheatmap = document.getElementById("network_" + (id + 1));
     let plotheatmap = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "Displaying the Weights of Nodes",
-        "background": "#FEFEFE",
+        "background": "#eeeeee",
+      "view": {"fill": "#f9f9f9"},
         "title": "Weights of Neurons",
 
-          "width": 125,
-          "height": 125,
+          "width": 150,
+          "height": 150,
           "data": {
             "values": data_weights,
           },
@@ -1098,7 +1250,7 @@ let classifier = true;
               "field": "layer", 
               "type": "ordinal",
               "axis": { "title":"","labelAngle":40},
-              "sort":["Input Layer","First Hidden Layer","Second Hidden Layer","Output Layer"] },
+              "sort":["Input Layer","First Layer","Second Layer","Output Layer"] },
             "y": { 
               "field": "yposition", 
               "type": "quantitative",
@@ -1123,19 +1275,24 @@ let classifier = true;
             "mark": "circle",
             "config": {"axis": {"grid": false}}
             }
-            vegaEmbed(networkIDheatmap, plotheatmap);
+            vegaEmbed(networkIDheatmap, plotheatmap, {renderer: "svg", actions:false});
+            timer_plot += (performance.now()-timer_plot_start)/test_iterations
 
   }
+
   function plot_lrd(id, lrd){
+    let timer_plot_start = performance.now()
       let networkID = document.getElementById("lrd_"+(id+1));
       let lrdplot = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "A simple scatter plot to display circle data.",
-        "background": "#FEFEFE",
-        "title": "LearningRateDecay",
+        "background": "#eeeeee",
+        
+        "title": "Average Learning Rate Change per Layer",
         "vconcat": [{
-          "width": 125,
-          "height": 125,
+          "view": {"fill": "#f9f9f9"},
+          "width": 150,
+          "height": 150,
           "data": {
             "values": lrd,
           },
@@ -1147,17 +1304,12 @@ let classifier = true;
             "encoding": {
               "y": { "field": "value", "type": "quantitative", "title": "Learning Rate", "scale":{"domain":[0,0.6]}, },
               "color":{"field":"type", "type":"nominal",
-                "scale":{"range":["#33a02c","#1f78b4","#a6cee3"],
+                "scale":{"range":["#7570b3","#d95f02","#a6cee3","#1b9377"],
                           "domain":["input","hidden1","hidden2"]},
-                "legend": {"labelExpr": "datum.label == 'input' ? 'Input' :datum.label == 'hidden1' ? 'First Layer' : 'Second Layer'"
+                "legend": {"labelExpr": "datum.label == 'input' ? 'Input Layer' :datum.label == 'hidden1' ? 'First Layer' : 'Second Layer'"
             },
-            "title":"Layers",
+            "title":"Layer",
           }
-              //"color": {
-              //  "legend": { "title": "Legend" },
-              //  "field": "type",
-              //  "type": "nominal"
-              //}
             }
           },
           {
@@ -1188,34 +1340,48 @@ let classifier = true;
 
         ]
       }
-      vegaEmbed(networkID, lrdplot);
+      vegaEmbed(networkID, lrdplot, {renderer: "svg", actions:false});
+      timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
 
     function plot_similarity(id, switched_signs){
+      let timer_plot_start = performance.now()
       let networkID = document.getElementById("similarity_"+(id+1));
       let similarity_chart= {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
           "data":{"values":switched_signs},
           "mark": "bar",
-          
-          "height": 150,
+          "title":{
+            "text":"Pairwise Similarity in the same Layer",
+            "offset":8},
+          "width":150,
+          "height":150,
+          "background": "#eeeeee",
+      "view": {"fill": "#f9f9f9"},
           "encoding": {
-            "x": {"field": "similarity"},
+            "x": {"field": "similarity", "title":"Similarity"},
             "y": {"aggregate":"count", "type": "quantitative"},
             "xOffset": {"field": "layerID"},
-            "color": {"field": "layerID"}
-          } 
+            "color": {"field": "layerID", "title":"Layer",
+            "scale":{"range":["#7570b3","#d95f02","#a6cee3","#1b9377"],
+                          },
+            "legend":{"labelExpr": "datum.label == '0' ? 'Input Layer' :datum.label == '1' ? 'First Layer' : 'Second Layer'"
+          } }
+        }
         }
       
 
         let similarity_chart2= {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "repeat": {"layer": ["0","1","2"]},
+        "background": "#eeeeee",
+      "view": {"fill": "#f9f9f9"},
         "spec": {
           "mark": "bar",
           "encoding": {
             "x": {
               "field": "similarity",
+              "title": "Similarity",
               "type": "nominal"
             },
             "y": {
@@ -1231,9 +1397,18 @@ let classifier = true;
           "mark": {"invalid": null}
         }}
 
-      vegaEmbed(networkID, similarity_chart);
+      vegaEmbed(networkID, similarity_chart, {renderer: "svg", actions:false});
+      timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
 
+    function training_done(){
+      trainingCounterDone++
+      if (document.getElementById("graph_section").childElementCount-1 == trainingCounterDone){
+      document.getElementById("trainingOnData").innerText = "The training was finished.";
+      trainingCounterDone = 0
+      currentlytraining = false
+      }
+    }
 
     //check if the smallest dataset got new elements
     function checkForEpoch(array, id){
@@ -1256,222 +1431,240 @@ let classifier = true;
       for (let i = 0; i<4; i++){
         const worker = await new Worker("worker.js");
         worker.addEventListener("message", function handleMessageFromWorker(msg){
-        //acc.push(msg)
-          //check firs
           if (msg.data[1] == "acc"){
-            //acc[msg.data[0]].push(msg.data[2]);
-            //if (checkForEpoch(acc, msg.data[0])){
-            //  plot_training(networks, acc, acc[msg.data[0]].length-1);
               plot_training(msg.data[0], msg.data[2]);
-            //}
-            
-          
+
           }
           else if (msg.data[1] == "heatmap"){
-            //heat[msg.data[0]].push(msg.data[2]);
-            //if (checkForEpoch(heat, msg.data[0])){
-            //  plot_heat(networks, heat, heat[msg.data[0]].length-1);
               plot_heat(msg.data[0], msg.data[2]);
-            //}
+              heap()
           }
           else if (msg.data[1] == "lrd"){
-            //learningRateDecay
               plot_lrd(msg.data[0], msg.data[2]);
           }
           else if (msg.data[1]=="similarity"){
             plot_similarity(msg.data[0], msg.data[2])
 
           }
+          else if (msg.data[1]=="measurments"){
+            console.log(msg.data[2])
+            time_copy += msg.data[2][0]/test_iterations
+            timer_send_end += msg.data[2][1]/test_iterations
+            time_workerinitNetworkend+= msg.data[2][2]/test_iterations
+            timer_worker_train_end+= msg.data[2][3]/test_iterations
+            timer_learningRate_end+= msg.data[2][4]/test_iterations
+            timer_showheatmap_end+= msg.data[2][5]/test_iterations
+            timer_similarity_end+= msg.data[2][6]/test_iterations
+            timer_network+= msg.data[2][7]/test_iterations
+
+          }
+          else if (msg.data[1]=="done"){
+            if (tests_aktiv){
+              training_done2_test()
+            }
+            else{
+            training_done()
+          }
+        }
       })
         workerlist.push(worker)
       }
       return workerlist
     }
 
-    async function startTraining2(workerlist){
+    async function startTraining2(){
       let networks = document.getElementById("graph_section").childElementCount - 1;
       if (workerlist.length == 0){workerlist = await initWorker(networks)}
 
       if (!currentlytraining){
     currentlytraining = true;
     document.getElementById("trainingOnData").innerText = "The training has started!";
-    model_training=[];
-    models = [];
     for (let j = 0; j < networks; j++) {
       workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points, classifier:classifier})     
     }
-    //model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
-
-//Promise.all(model_training).then(() => {
-  //document.getElementById("trainingOnData").innerText = "The trainings process is done!";
-  //}) 
-  currentlytraining = false;
   }
     }
 
 
     var models;
     var model_training;
-  async function startTraining() {
-    if (!currentlytraining){
-    currentlytraining = true;
-    document.getElementById("trainingOnData").innerText = "The training has started!";
-    model_training=[];
-    models = [];
-    for (let j = 0; j < document.getElementById("graph_section").childElementCount - 1; j++) {
-      let model = await tf.sequential();
-      models.push(model);
-      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j], 2);
-      model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
-    }
-    Promise.all(model_training).then(() => {
-      document.getElementById("trainingOnData").innerText = "The trainings process is done!";
-      currentlytraining = false;
-    }) 
-  }}
 
-
-  async function showheatmap(j){
-    let networkIDheatmap = document.getElementById("network_" + (j + 1));
-    let data_weights = [];
-    
-    let input = await models[j].getWeights()[0].array()
-    let firstLayer = await models[j].getWeights()[2].array()
-    let secondLayer = await models[j].getWeights()[4].array()
-    let all_weights = [input, firstLayer, secondLayer]
-    let maxNeurons = Math.max(...all_weights.map(y => y.length));
-    let layer_name =""
-    let max_node_weight  = 0 
-    for (let layer = 0; layer < 3; layer++){
-      let number_neurons = all_weights[layer].length;
-      for (let neuron = 0; neuron < number_neurons; neuron++){
-        let weights = all_weights[layer][neuron].length;
-        let weight_sum = 0;
-        for (let weight = 0; weight < weights; weight++){
-          weight_sum += Math.abs(all_weights[layer][neuron][weight]);
-        } 
-        if (weight_sum > max_node_weight){max_node_weight = weight_sum}
-      } 
-    }
-    for (let layer = 0; layer < 3; layer++){
-      if (layer == 0){ layer_name = "Input Layer"}
-      else if (layer == 1){layer_name ="First Hidden Layer"}
-      else if (layer == 2){layer_name ="Second Hidden Layer"}
-      let number_neurons = all_weights[layer].length;
-      for (let neuron = 0; neuron < number_neurons; neuron++){
-        let weights = all_weights[layer][neuron].length;
-        let weight_sum = 0;
-        for (let weight = 0; weight < weights; weight++){
-          weight_sum += Math.abs(all_weights[layer][neuron][weight]);
-        }
-        let scaled_weight_sum = weight_sum/max_node_weight
-        let yposition = ((neuron+1)/(number_neurons+1));
-        data_weights.push({"layer":layer_name,"yposition":yposition, "weight":scaled_weight_sum,"neuron":neuron})
-      }
-
-    }
-
-    data_weights.push({"layer":"Output Layer","yposition":0.33, "weight":0.7,"neuron":0});
-    data_weights.push({"layer":"Output Layer","yposition":0.67, "weight":0.7,"neuron":1});
-
-    let plotheatmap = {
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "description": "Displaying the Weights of Nodes",
-        "background": "#FEFEFE",
-        "title": "Weights of Neurons",
-
-          "width": 125,
-          "height": 125,
-          "data": {
-            "values": data_weights,
-          },
-          "encoding": {
-            "x": { 
-              "field": "layer", 
-              "type": "ordinal",
-              "axis": { "title":"","labelAngle":40},
-              "sort":["Input Layer","First Hidden Layer","Second Hidden Layer","Output Layer"] },
-            "y": { 
-              "field": "yposition", 
-              "type": "quantitative",
-              "axis": {
-                "ticks": false,
-                "labels":false,
-                "title":"",
-                },
-              "scale":{"domain":[1,0]},
-              },
-            "size":{
-              "field":"weight",
-              "type":"quantitative",
-              "title":"Weight related to main Node"
-            },
-            "tooltip":[
-              {"field":"layer", "type":"ordinal", "title":"Layer"},
-              {"field":"neuron", "type":"qualitative", "title":"Neuron"},
-              {"field":"weight", "type":"qualitative", "title":"Weight"}
-            ]
-          },
-            "mark": "circle",
-            "config": {"axis": {"grid": false}}
-
-            }
-          
-
-            vegaEmbed(networkIDheatmap, plotheatmap);
-    //console.log(models[0].getWeights()[0].array())
-  }
-
-    //model.fit(trainingData, outputData, {epochs:100}).then((history) => {model.predict(tf.tensor2d([[150.0,150.0],[0,0],[10,10],[100,100],[20,-100]])).print()});
 
     //let prediction = model.predict(tf.tensor2d([[150.0,150.0],[0,0],[10,10],[100,100],[20,-100]]));
-
 
 //ctr + r, chrome --enable-precise-memory-info
 //https://jsfiddle.net/asmgdb06/
 //Application Test
+let timeInitWorker_start
+let timeInitWorker_End
+let start 
+let training_elements  =0;
 
-function getTestResults() {
-  addNetwork();
-  addNetwork();
-  addNetwork();
-  getTestResultsRec(array = [0,0,0,0])
+async function startTraining2_test(firstValueNeurons, secondValueNeurons, num_net){
+  training_elements = num_net  
+  timeInitWorker_start = performance.now()
+      if (workerlist.length == 0){workerlist = await initWorker(num_net)}
+    timeInitWorker_End = performance.now()-timeInitWorker_start
+    //push(timeInitWorker_End)
+    start = Date.now()
+    for (let j = 0; j < num_net; j++) {
+      workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points, classifier:classifier, start:start})     
+    }
+  }
+
+async function training_done2_test(){
+      trainingCounterDone++
+      if (training_elements == trainingCounterDone){
+      trainingCounterDone = 0
+      uJSHS = window.performance.memory.usedJSHeapSize;
+      let end = performance.now();
+      memoryUsage.push(uJSHS);
+      testtime.push(end-start);
+      testarray[case_num] += 1;
+      let [firstValueNeurons, secondValueNeurons, num_net] = await changeInputClassification(testarray)
+      
+    if (firstValueNeurons == 0){
+        store_eval()
+      }
+    else {
+      startTraining2_test(firstValueNeurons, secondValueNeurons, num_net)
+    }
+    }
+  }
+
+function heap(){
+  let heapsize = window.performance.memory.usedJSHeapSize
+  if (heapsize > max_heap){
+    max_heap = heapsize
+  }
+  average_heap += heapsize/(test_iterations*6*training_elements)
+  //6 = 0,10,20,30,40,50
+}
+function resetValues(){  
+
+  testtime=[]
+  memoryUsage=[]
+  timeInitWorker=[]
+  timeInitNetwork = []
+  time_copy  =0
+    timer_send_end  =0
+    time_workerinitNetworkend =0
+    timer_worker_train_end =0
+    timer_learningRate_end =0
+    timer_showheatmap_end =0
+    timer_similarity_end =0
+    timer_network =0
+    timer_plot=0
+    average_heap =0
+    max_heap = 0
+
+  }
+
+
+
+let test_case = 2;
+let parallel = false;
+async function getTestResults() {
+  tests_aktiv = true;
+  testarray = [0,0,0,0]
+  case_num = 0
+  resetValues()
+
+  if (test_case==0){
+  testrunname = "Classification_SingleThread"
+  classifier = true
+  getTestResultsRec(array = [0,0,0,0])}
+
+  if (test_case==1){
+  testrunname = "Regression_SingleThread"
+  classifier = false
+  selectData("regplain")
+  convertdata()
+  getTestResultsRec(array = [0,0,0,0])}
+
+  if (test_case==2){
+  parallel = true
+  selectData("circle_dataset")
+  testrunname = "Classification_MultiThread"
+  classifier = true
+  startTraining2_test([2], [2], 1)}
+
+  //if (test_case==3){
+  //  parallel = true
+  //selectData("regplain")
+  //testrunname = "Regression_MultiThread"
+  //classifier = false
+  //startTraining2_test([2], [2], 1)
+//}
 }
 
-  async function changeInput(testarray){
+  async function changeInputClassification(testarray){
     if (testarray[0]<test_iterations){
     let [firstValueNeurons, secondValueNeurons] = [[2], [2]];
-      return [firstValueNeurons, secondValueNeurons,1,0]
+      return [firstValueNeurons, secondValueNeurons,1]
   }
-  else if(testarray[1]<test_iterations){
-    let [firstValueNeurons, secondValueNeurons] = [[2,2,2,2], [2,2,2,2]];
-    return [firstValueNeurons, secondValueNeurons,4,1]
+  if (testarray[0]==test_iterations){
+    case_num++
+    testarray[0]++
+    store_eval(0)
+    
   }
-  else if(testarray[2]<test_iterations){
+
+  if(testarray[1]<test_iterations){
     let [firstValueNeurons, secondValueNeurons] = [[8], [8]];
-    return [firstValueNeurons, secondValueNeurons,1,2]
+    return [firstValueNeurons, secondValueNeurons,1]
   }
-  else if(testarray[3]<test_iterations){
+  if (testarray[1]==test_iterations){
+    store_eval(1)
+    case_num++
+    testarray[1]++
+  addNetwork();
+  addNetwork();
+  addNetwork();
+  window.scrollTo(0, document.body.scrollHeight);
+}
+
+  if(testarray[2]<test_iterations){
+    let [firstValueNeurons, secondValueNeurons] = [[2,2,2,2], [2,2,2,2]];
+    return [firstValueNeurons, secondValueNeurons,4]
+  }
+  if (testarray[2]==test_iterations){
+    store_eval(2)
+    case_num++
+    testarray[2]++}
+
+  if(testarray[3]<test_iterations){
     let [firstValueNeurons, secondValueNeurons] = [[8,8,8,8], [8,8,8,8]];
-    return [firstValueNeurons, secondValueNeurons,4,3]
+    return [firstValueNeurons, secondValueNeurons,4]
   }
-  else{return [0,0]}
+  
+  store_eval(3)
+  test_case++
+getTestResults(test_case)
 
 }
  
   async function getTestResultsRec(testarray) {
-    [firstValueNeurons, secondValueNeurons, num_net, case_num] = await changeInput(testarray)
-    if (firstValueNeurons != 0){
+    
+    [firstValueNeurons, secondValueNeurons, num_net] = await changeInputClassification(testarray)
     let start = performance.now();
     document.getElementById("trainingOnData").innerText = "The training has started!";
     model_training=[];
     models = [];
+    let inittime= 0
     for (let j = 0; j < num_net; j++) {
-      let model = await tf.sequential();
-      models.push(model);
-      await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j], 2);
-      model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, 2, firstValueNeurons[j], secondValueNeurons[j], 2))}));
+      let time_init_network_start = performance.now()
+      let model = await initNetwork(models[j], firstValueNeurons[j], secondValueNeurons[j], 2, classifier);
+      models.push(model);    
+      let time_init_network_end = performance.now() - time_init_network_start
+      inittime += time_init_network_end 
     }
+    timeInitNetwork.push(inittime/num_net)
+    let time_start_network_training = performance.now()
+    for (let j = 0; j < num_net; j++) {
+    model_training.push(new Promise((resolve, reject) => {resolve(training(models[j], j, classifier))}));
+    }
+
     Promise.all(model_training).then(() => {
       document.getElementById("trainingOnData").innerText = "The trainings process is done!";
       uJSHS = window.performance.memory.usedJSHeapSize;}).then(()=>{
@@ -1480,23 +1673,54 @@ function getTestResults() {
       //memoryUsage.push({"ram":uJSHS, "time":end-start,"case_number":case_num});
       memoryUsage.push(uJSHS);
       testtime.push(end-start);
+      //push.
       testarray[case_num] += 1;
       getTestResultsRec(testarray)
     }) 
-  }
-  else{ 
+  
 
-    localStorage.setItem("testtime", JSON.stringify(testtime));
-    localStorage.setItem("memoryUsage", JSON.stringify(memoryUsage));
-  //todo storage data
-}
 }
 
+function store_eval(neuronNum){
+//  let timeName = testrunname + "_Time"
+//  let memoryUsageName = testrunname + "_memoryUsage"
+
+//localStorage.setItem(timeName, JSON.stringify(testtime));
+//localStorage.setItem(memoryUsageName, JSON.stringify(memoryUsage));
+
+//console.log(timeName, memoryUsageName)
+console.log("Testrun done")
+let result_storage = 
+  [
+  test_case,
+  time_copy,
+  timer_send_end,
+  time_workerinitNetworkend,
+  timer_worker_train_end,//all
+  timer_learningRate_end,
+  timer_showheatmap_end,
+  timer_similarity_end,
+  timer_network, 
+  timer_plot,
+  max_heap,
+  average_heap,
+  ]
+  let storage_name = String(test_case) + String(neuronNum)
+  console.log(storage_name)
+localStorage.setItem(storage_name, JSON.stringify(result_storage));
+resetValues()
+//jsheap: sum(every 10/5)
+
+}
 
 function showTestResults(){
-  console.log(JSON.parse(localStorage.getItem("testtime")))
-  console.log(JSON.parse(localStorage.getItem("memoryUsage")))
+  //console.log(JSON.parse(localStorage.getItem("testtime")))
+  //console.log("memoryUsage "+JSON.parse(localStorage.getItem("memoryUsage")))
+  console.log("23: "+JSON.parse(localStorage.getItem(23)))
+//Regression_SingleThread_Time
+//Regression_SingleThread_memoryUsage
 }
+
 
   </script>
 
