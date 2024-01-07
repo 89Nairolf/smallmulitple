@@ -936,7 +936,7 @@ option:hover{
       },}
     }
 
-    vegaEmbed("#dataplot", dataSpec, {renderer: "svg", actions:true});
+    vegaEmbed("#dataplot", dataSpec, {renderer: "svg", actions:false});
   }
 
   let trainingData = []
@@ -1384,7 +1384,7 @@ plot_similarity(id, similarity_array)
       
 
     }
-      vegaEmbed(networkID, plot3, {renderer: "svg", actions:true});
+      vegaEmbed(networkID, plot3, {renderer: "svg", actions:false});
       timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
   //}
@@ -1436,7 +1436,7 @@ plot_similarity(id, similarity_array)
             "mark": "circle",
             "config": {"axis": {"grid": false}}
             }
-            vegaEmbed(networkIDheatmap, plotheatmap, {renderer: "svg", actions:true});
+            vegaEmbed(networkIDheatmap, plotheatmap, {renderer: "svg", actions:false});
             timer_plot += (performance.now()-timer_plot_start)/test_iterations
 
   }
@@ -1501,7 +1501,7 @@ plot_similarity(id, similarity_array)
 
         ]
       }
-      vegaEmbed(networkID, lrdplot, {renderer: "svg", actions:true});
+      vegaEmbed(networkID, lrdplot, {renderer: "svg", actions:false});
       timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
 
@@ -1565,7 +1565,7 @@ plot_similarity(id, similarity_array)
 
       }
 
-      vegaEmbed(networkID, plorfirstLayer_chart, {renderer: "svg", actions:true});
+      vegaEmbed(networkID, plorfirstLayer_chart, {renderer: "svg", actions:false});
       timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
 
