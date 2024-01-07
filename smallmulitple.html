@@ -23,6 +23,41 @@ tr:nth-child(even) {
 option:hover{
   cursor: pointer;
 }
+.tooltip {
+  position: relative;
+  display: inline-block;
+  border-bottom: 1px dotted black;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 320px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin: 0px 0px -60px -60px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.tooltip .tooltiptext::after {
+  content: "";
+  position: absolute;
+  top: -35%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color:  transparent transparent #555 transparent;
+}
+.tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
   .sidebar {
     height: 100%;
     width: 0;
@@ -54,6 +89,7 @@ option:hover{
   .openbtn {
     font-size: 20px;
     cursor: pointer;
+    width:  150px;
     background-color: #111;
     color: white;
     padding: 10px 15px;
@@ -75,13 +111,12 @@ option:hover{
   #main {
     transition: margin-left .5s;
     padding: 16px;
+    display: none;
   }
   #explanation{
     display: none;
   }
-  #about{
-    display: none;
-  }
+  
   @media screen and (max-height: 450px) {
     .sidebar {
       padding-top: 15px;
@@ -107,62 +142,93 @@ option:hover{
   </div>
   <div id="stats"></div>
   <button class="openbtn" id="openbutton" onclick="openNav()" style="font-size: 90%;">☰ Open Sidebar</button>
-  <button id="openbutton" onclick="getTestResults()" style="font-size: 90%;">Tests</button>
-  <button id="openbutton" onclick="showTestResults(testtime,memoryUsage)" style="font-size: 90%;">ShowTests</button>
+  <!-- <button id="openbutton" onclick="getTestResults()" style="font-size: 90%;">Tests</button>
+  <button id="openbutton" onclick="showTestResults(testtime,memoryUsage)" style="font-size: 90%;">ShowTests</button>-->
   
   <div id="about">
     <div style="margin:auto; width:30%;">
-    <h2 style="font-size: 200%;">How many Neurons do I need?</h2>
+
+
+<h2 style="font-size: 200%;">How does a Neural Network learn?</h2>
     <p>
-      You've probably already heard of artificial intelligence. It is already being used
-      everywhere. In weather forecasting, in autonomous cars, in image processing, in 
-      medicine, in research and much more. The algorithms often remain hidden from us.
-      Now, with Chat GPT from OpenAI, an interface has been created that allows anyone 
-      to experience live interaction with an AI. But what exactly is an AI? This type
-      of intelligence describes the ability to act appropriately and proactively, to 
-      perceive sensory impressions and to react to them. The aim is to imitate human
-      behavior that learns from data. This involves so-called neurons that are 
-      connected to each other. By adding data, training and evaluating right or 
-      wrong, the connections (also known as weights) of the neurons are strengthened 
-      or weakened. The algorithm is often presented as a black box model where the 
-      user does not know how the training actually works. We want to change that!
-</p>
+      You've probably heard of artificial intelligence. It is being used everywhere. 
+      Weather forecasting, autonomous cars, image processing, medicine, research, 
+      and more. But what exactly is AI? This type of intelligence describes the ability
+      to act appropriately and proactively, to perceive and respond to sensory input.
+      The goal is to mimic human behavior by learning from data. A subclass of AI is
+      deep neural networks. They consist of interconnected neurons. By adding data,
+      training, and evaluating right or wrong, the connections (also known as weights)
+      of the neurons are strengthened or weakened. The algorithm is often presented
+      as a black box model, where the user does not know how the training actually
+      works. We want to change that!</p>
       <h3>
-        From the black box to the white box model
+        From the Black Box to the White Box Model
       </h3>
 <p>
-  Efforts have been underway for some time to make AI and neural networks more 
-  accessible to the general public. Tensorflow Playground is one such tool, which
-   was released in 2013. It allows you to train your own network on a data set 
-   and see the weights of the connections as well as how the node splits the data! 
-   Cool, right?<br>
-  Some parameters are not learned by the network and must be determined before 
-  training, the so-called hyperparameters. There are 2<sup>n</sup> possible constellations,
-   with n as the number of hyperparameters. With Tensorflow Playground, you can 
-   set a lot of parameters without being directly aware of the effects.
-</p>
-<h3>How many Neurons do I need?</h3>
-<p>
-  We deal with this question. Does more always help more? And how does this affect
-   training? In the <a href="javascript:void(0)" onclick="closeNavTraining()" >Training section</a>,
-    inside the sidebar, you have the opportunity to create 
-   your own network. We stay close to the Tensorflow Playground model, limit the
-    selection of hyperparameters and provide you with a small multiple so that you
-     can get information about the effects as well as the possibility to compare 
-     it with similar networks. A more detailed explanation of the individual 
-     graphics can be found in the <a href="javascript:void(0)" onclick="closeNavExplain()" >Analysis section</a>.
+  For some time now, there have been efforts to make AI and neural networks more 
+  accessible to the general public. <a href="https://playground.tensorflow.org/">Tensorflow Playground</a> is one such tool. It 
+  allows you to train your own network on a dataset and see the weights of the 
+  connections as well as how the neurons divide the data!  Some parameters are not
+  learned by the network and must be determined before training, the so-called 
+  hyperparameters. The number of possible connections for a hyperparameter set is
+  exponential. With our tool we want to show how the number of neurons and the weight
+  initialization can influence the evolution of a neuron.
+
+    The <a href="javascript:void(0)" onclick="closeNavTraining()" >training section</a>
+   allows you to create your own networks. We stay close to the Tensorflow Playground model, limit the
+    choice of hyperparameters and provid a small multiple so that you
+     can get information about the effects and the ability to compare 
+     with similar networks. A more detailed explanation of each 
+     subchart can be found in the <a href="javascript:void(0)" onclick="closeNavExplain()" >explanation section</a>.
+    </p>
+
+    <h3>Concepts to help you to understand the training process</h3>
+    <h4>Function Approximation</h4>
+    <p>
+      Predictive modeling is the problem of developing a model that approximates a function using historical data to make a prediction for new and unseen data.
+      In general, the function approximation task can be divided into classification and regression tasks.
+      Classification is the task of approximating a mapping function from input variables to a discrete output variable. In our tool, we provide points, that are either part of class one or class two.
+      Regression is the task of approximating a mapping function from input variable to a continuous output. In our tool, the positional encoding can take any value between -1 and 1. The output
+      is also often referred to as a label.           
+    </p>
+    <h4>Artificial Neuron and Multi-Layer Perceptron</h4>
+    <p>
+      How does a deep neural network learn to map input to output?  A neural network learns with 
+      so-called artificial neurons. As shown below. </p>
+      <figure>
+      <img src="img/neuron.png" alt="Artificial Neuron" width="100%">
+      <figcaption>An artificial neuron.</figcaption>
+    </figure><figure>
+      <img src="img/nn.png" alt="" width="100%">
+      <figcaption>A fully connected neural network.</figcaption>
+    </figure>
+      <p>
+      A neuron receives a number of input 
+      values. These values are multiplied by a weight that is learned during the training process. 
+      Now, everything is summed up and the sum is used for an activation function. In a deep 
+      neural network, multiple neurons are arranged in layers, where the output of one layer 
+      is the input of the next layer. Thus, the network learns by adjusting its weights.
+    </p>
+    <h4>Backpropagation</h4>
+    <p>
+      The weights are adjusted during the training process. The training includes three stepts, the feedforward step, the backpropagation and the update of weights step.
+      In the feedforward step, data is send throught the network. In the output layer, a costfunction is calculated. As example the Mean Squared Error function, that calculates 
+      the distance between the models prediction and the label of the data. To minimize the error, a scaled negative gradient is calculated for each neuron. This is done 
+      layer by layer. At the end, all weights get adjusted according to the costfunction.
+
+
     </p>
 
   </div>
   </div>
   
   <div id="main">
-    <h2 style="margin-left:350px; font-size: 200%;">How many Neurons do I need?</h2>
+    <h2 style="margin-left:350px; font-size: 200%;">Influence of a Neuron</h2>
     
     <div id="parameterdiv" style="display: flex; margin: 0px 0px 0px 150px;">
       <div id="dataplot" style="height:200px; width: 250px; margin-right:50px"></div>
       <div id="parameters">
-        <label>Type of Network: </label>
+        <label>Type of Problem: </label>
         <select id="networktype">
           <option value="classification">Classification</option>
           <option value="regression">Regression</option>
@@ -183,7 +249,7 @@ option:hover{
           <option value="weights_equal">All values are equal</option>
           <option value="weights_set">Prescribed values</option>
         </select><br>
-        <label>Add/Remove Number of Networks: </label>
+        <label>Add/Remove a Network: </label>
         <button class="parameter_button" onclick="addNetwork()">+</button>
         <button class="parameter_button" onclick="removeNetwork()">-</button><br>
       
@@ -191,8 +257,8 @@ option:hover{
           <tr>
             <th>Layer: </th>
             <th>Input</th>
-            <th>Hidden One</th>
-            <th>Hidden Two</th>
+            <th>First Layer</th>
+            <th>Second Layer</th>
             <th>Output</th>
           </tr>
 
@@ -207,7 +273,7 @@ option:hover{
 
   <div id="explanation">
     <div style="margin:0 auto; width:30%">
-      <h2 style="font-size: 200%;">How many Neurons do I need?</h2>
+      <h2 style="font-size: 200%;">How do neurons change?</h2>
       <p>
         So many charts at once, but what can you learn from them? 
         In the following, we will take a closer look at the individual charts.
@@ -221,15 +287,10 @@ option:hover{
     problem where a data point belongs to exactly one class. In our two 
     dimensional data set there are the x and y coordinates, which are also 
     the input values in the network. In classification, the network must 
-    output a class that has the highest probability. In regression, there 
+    return a class that has the highest probability. In regression, there 
     are no classes and an attempt is made to calculate a computed value based 
     on the available data. Therefore, there is only one output value here.
 </p>
-    <div class="example">
-      Classification,
-      Regression,
-  
-    </div>
   
     <h3>Weights</h3>
   <p>
@@ -237,14 +298,17 @@ option:hover{
     network will prioritize. This means that with a bit of luck a solution 
     can be found quickly, with bad luck none. For the reproduction of networks,
      it is possible to determine the weights yourself with fixed values. 
-     However, if all values are the same, the network will not improve the
-      symmetry ensures that all values have the same input and output and 
-      the network is not trained, thus all neurons remain the same except 
+     However, if all weights in a layer are the same, the network will struggle to learn 
+     as the symmetry ensures that all values have the same input and 
+     output and the network is not trained, thus all neurons remain the same except 
       for the input layerwise. </p>
 
     <div class="example">
-      Random, one good, one bad
-      All equal - weights of Neurons, Pariwise similarity
+      <div></figure><figure>
+        <img src="img/equal_weights.png" alt="" width="250px">
+        <figcaption>All weights are equal and all neurons in the first layer are equal. <br> 
+        </figcaption>
+      </figure></div>
     </div>
     
     <h2>Chart Explanation</h2>
@@ -267,18 +331,25 @@ option:hover{
     No accuracy is specified for regression, as there are no classes
     respectively an infinite number of classes.
   </p>
-  <div class="example">
-    Classification - good
-    weniger Neuronen möglich?
-    Classification - bad
-    mehr Neuron testen, bzw mit neuen Random Variablen probieren
-    Regression - good
-    Regression - bad
+  <div class="example" style="height:400px;">
+
+  <div class = "first" style="display:flex">
+    <div> <img src="img/sucess.png" alt="" width="250px"></div>
+    <div><p>
+  This network seemed to train well, you might want to add a neuron, to see if that can speed up the process or remove one to see if it can still solve the problem.
+</p></div>
   </div>
+
+  <div class = "second" style="display:flex">
+    <div> <img src="img/nosuccess.png" alt="" width="250px"></div>
+    <div><p>This network seemed to not find an approximation function, you might want to add a neuron, to see if that can help to solve the problem.</div>
+</p></div>
+  </div>
+
   
-  <h3>Weights of Neurons</h3>
+  <h3>Influence of a Neuron</h3>
   <p>
-    This graph shows you the total sum of all outgoing connections 
+    This chart shows you the total sum of all outgoing connections 
     of a neuron in relation to the most influential neuron in the 
     network, which amplifies the input that leads to a good output. 
     Note that the output layer has no weights and has been assigned 
@@ -289,64 +360,89 @@ option:hover{
   
   </p>
   <div class="example">
-    Due to the independence of the coordinates in the Classification - 
-    circle problem, we expect them to be approximately the same size. 
-    If the coordinates are dependent as in the Classification - Gaussian
-     problem, where a positive coordinate automatically has a unique 
-     label, we expect different sizes.
-  
-    Too many neurons in the subsequent layer can cause us to have two 
-    neurons there that have learned the same thing, strengthen the same 
-    neurons in the previous layer, but both remain the same size due to
-     the equality.
+    <div class = "first" style="display:flex">
+      <div> <img src="img/circle_input.png" alt="" width="250px"></div>
+      <div><p>Due to the independence of the coordinates in the Classification - 
+        Circle problem, we expect them to be approximately the same size. Here, 
+        the values are 0.28 and 0.3.
+  </p></div>
+    </div>
     
-    Neurons are changed in the process of backpropagation depending on
-   their previous weight. If this is small from the start small from
-    the beginning, it can also have a smaller influence later on. This
-    neuron can be neglected, as other neurons have found a different
-   path/dependency.
+    
+    <div class = "second" style="display:flex">
+      <div> <img src="img/gaus_input.png" alt="" width="250px"></div>
+      <div><p>If the coordinates are dependent as in the Classification - Gaussian
+        problem, where a positive coordinate automatically has a unique 
+        label, we expect different sizes. Here, the values are 0.38 and 0.88.
+     </p></div>
+    </div>
+    
+    
+     <div class = "third" style="display:flex">
+      <div> <img src="img/size.png" alt="" width="250px"></div>
+      <div><p>Too many neurons in a subsequent layer can cause that the influence 
+        and the overall weight is increasing, as the neuron weights are 
+        influenced by several following neurons when adjusting its weights. In this
+        example the neurons in the hidden layer look similar small and both have two 
+      outgoing weights. And the training is highly dependent on the feature of the 
+      input, as the output is maximised and set 1.</p></div>
+    </div>
+    
+    
   </div>
+<h3>Weight Development in First Layer</h3>
+<p> This chart allows us to have a look inside the first layer. It allows us to 
+  see which neurons are priorized, when they start learning, and when 
+  they stop learning. </p>
+  <div class="example" style="height:400px;">
 
-  <h3>Average Learning Rate Change</h3>
+    <div class = "first" style="display:flex">
+      <div> <img src="img/weight_dev.png" alt="" width="250px"></div>
+      <div><p>
+    In this example, the network tries to maximize the output of neuron 1 and determine 
+    a certain value for neuron 0.
+  </p></div>
+    </div>
+  
+    <div class = "second" style="display:flex">
+      <div> <img src="img/weight_dev_2.png" alt="" width="250px"></div>
+      <div><p>
+        In this example, we see that the two neurons stand out, as they were stimulated 
+        early, while the rest has no significant learning curve.
+      </p></div>
+
+    </div>
+
+
+
+  <h3>Learning Rate Development per Layer</h3>
   <p> 
     The learn rate describes the difference in total weights between two epochs.
     The layers are added together and the average is calculated. If the learning 
     rate is high, the network learns more in the epoch than if it is low. The 
-    learning rate increases due to the learning rate modifier and approaches
-    zero. With our data, a good network should only give one output/training
-    process, otherwise adding another neuron could help.
+    learning rate increases if a learning path through the network has been found and approaches
+    zero if weights do not need to be adjusted.
 
   </p>
   
-    <div class="example">
-      In this graph, we can see that layers followed by a layer with many 
-      neurons learn faster than layers with fewer neurons following them.
-      This is due to the fact that in the backpropagation many neurons 
-      adapt quickly and learn the same thing. This then adds up in the layer
-      before it, which causes the learning rate to swing. 
+  <div class = "second" style="display:flex">
+    <div> <img src="img/lrate.png" alt="" width="250px"></div>
+    <div><p>
+      In this example, we can see that at epoch 10 only the input and frst layer learn. 
+      All three layers have a local maximum at epoch 18. In combination with the 
+      first chart, we see that the area between epoch 8 and epoch 18 is a local 
+      minimum and the learn process did stagnate.
+      This chart can us also show the influence on how the number of neurons in the 
+      following layer influence the previous layer. This example has 2 in the 
+      input layer, 4 in the second layer and 6 in the second layer.
+    </p></div>
+
   </div>
-  <h3>Pairwise Similarity</h3>
-  <p>
-    The Pairwise Similarity compares the percentage distribution of the 
-    weights to the next layer with other neurons in the layer. This removes
-     the weight factor for each layer. As an example, [0,1] and [0,1] are 
-     shown as identical with the value 1. The example [1,0] and [0,1] with
-      0, and [0,1] and [1,1] with 0.5. The similarity was divided into ten bins.
-  
-  </p>
-  <div class="example">
-    For networks where all values are identical, all neurons in the same layer 
-    are identical.  
-  
-    For independent coordinates, the input neurons should be very different 
-    while dependency coordinates should be similar. Here we also see that many 
-    neurons in the first and second layer are identical. Manually, one could 
-    merge almost identical neurons to make the prediction of new data points 
-    more favorable in terms of computational performance.
-  </div>
+
+
   
   <p>
-  In conclusion, a high number of similar neurons can accelerate the training
+  In conclusion, a high number of neurons can accelerate the training
   process. However, this should not be too large, as the computing power 
   increases significantly in a fully connected network. Real world data is
   usually much more complex and requires larger networks. Networks that work
@@ -360,8 +456,8 @@ option:hover{
     let tests_aktiv = false;
     let testrunname =""
     let testarray = []
-    let test_iterations = 2;
-    let testtime =[];
+    let test_iterations = 100;
+    let testtime =0;
     let memoryUsage=[];
     let timeInitWorker=[];
     let timeInitNetwork=[];
@@ -376,7 +472,8 @@ option:hover{
     let timer_plot=0
     let max_heap = 0
     let average_heap = 0
-    
+    let timer_all = 0
+    let timer_start = 0
 
 
     
@@ -388,6 +485,8 @@ option:hover{
     let currentlytraining = false;
     let trainingCounterDone = 0;
 
+
+
     function addNetwork() {
       let networks = document.getElementById("graph_section").childElementCount;
       if (networks < 5) {
@@ -395,35 +494,75 @@ option:hover{
         let container = document.createElement("DIV");
         container.setAttribute("id", "graph_block_" + networks)
         container.style.backgroundColor = "#eeeeee";
-        container.style.height = "240px";
+        container.style.height = "210px";
         container.style.display = "flex";
         container.style.padding = "auto";
         document.getElementById("graph_section").appendChild(container);
-        let networkdescription = document.createElement("p");
-        networkdescription.innerText = "Network " + networks;
-        networkdescription.style.width = "100px";
-        networkdescription.style.margin = "auto 20px";
+        let networkdescription = document.createElement("DIV");
+        networkdescription.setAttribute("id", "networkdescription_" + networks);
+        networkdescription.style.height = "210px";
+        networkdescription.style.width = "110px";
         document.getElementById("graph_block_" + networks).appendChild(networkdescription);
+        let networkname = document.createElement("p");
+        networkname.innerText = "Network " + networks;
+        networkname.style.width = "110px";
+        networkname.style.margin = "60px 20px 0px 0px";
+        document.getElementById("networkdescription_" + networks).appendChild(networkname);
+    
         let acc_val = document.createElement("DIV");
         acc_val.setAttribute("id", "acc_val" + networks);
-        acc_val.style.height = "240px";
+        acc_val.style.height = "210px";
         acc_val.style.width = "330px";
         document.getElementById("graph_block_" + networks).appendChild(acc_val);
         let network = document.createElement("DIV");
         network.setAttribute("id", "network_" + networks);
-        network.style.height = "240px";
+        network.style.height = "210px";
         network.style.width = "280px";
         document.getElementById("graph_block_" + networks).appendChild(network);
+        let firstLayer_chart = document.createElement("DIV");
+        firstLayer_chart.setAttribute("id", "firstLayer_" + networks);
+        firstLayer_chart.style.height = "210px";
+        firstLayer_chart.style.width = "300px";
+        document.getElementById("graph_block_" + networks).appendChild(firstLayer_chart);
         let lrdgraph = document.createElement("DIV");
         lrdgraph.setAttribute("id", "lrd_" + networks);
-        lrdgraph.style.height = "240px";
+        lrdgraph.style.height = "210px";
         lrdgraph.style.width = "300px";
         document.getElementById("graph_block_" + networks).appendChild(lrdgraph);
-        let similarity_chart = document.createElement("DIV");
-        similarity_chart.setAttribute("id", "similarity_" + networks);
-        similarity_chart.style.height = "240px";
-        similarity_chart.style.width = "250px";
-        document.getElementById("graph_block_" + networks).appendChild(similarity_chart);
+
+        let networkinformation = document.createElement("DIV");
+        networkinformation.setAttribute("id", "networkinformation" + networks);
+        networkinformation.style.height = "210px";
+        networkinformation.style.width = "110px";
+        document.getElementById("graph_block_" + networks).appendChild(networkinformation);
+        let infobox = document.createElement("p");
+        infobox.innerText = "Information to: ";
+        infobox.style.width = "140px";
+        infobox.style.margin = "auto 2px";
+        document.getElementById("networkinformation" + networks).appendChild(infobox);
+        let networkinfo = document.createElement("DIV");
+        networkinfo.setAttribute("id", "networkinfo" + networks);
+        networkinfo.style.height = "80px";
+        networkinfo.style.width = "80px";
+        networkinfo.style.display = "flex";
+        document.getElementById("networkinformation" + networks).appendChild(networkinfo);   
+        for (let i = 0; i < 4; i++){
+        let networkinfoI = document.createElement("DIV");
+        networkinfoI.setAttribute("id", "networkinfo" + networks + i);
+        networkinfoI.setAttribute("class", "tooltip");
+        networkinfoI.innerText = i+1;
+        networkinfoI.style.backgroundColor = "#FFFFFF";
+        networkinfoI.style.border = "1px solid #c0c0c0";
+        networkinfoI.style.borderRadius = "2px";
+        networkinfoI.style.width = "10px";
+        networkinfoI.style.margin = "2px 2px auto auto";
+        document.getElementById("networkinfo" + networks).appendChild(networkinfoI);
+        let networkinfoIspan = document.createElement("p");
+        networkinfoIspan.setAttribute("id", "networkinfotext" + networks + i);
+        networkinfoIspan.setAttribute("class", "tooltiptext");
+        networkinfoIspan.innerText = i+1;
+        document.getElementById("networkinfo" + networks + i).appendChild(networkinfoIspan);
+      }     
         
         //append to table
         let tr  = document.createElement("tr");
@@ -745,12 +884,13 @@ option:hover{
         "values": points,
       },
 
-      "mark": "point",
-      "title":"Current Dataset",
-      "width": 150,
-      "height": 150,
+      "mark": "circle",
+      "title":"Selected Dataset",
+      "width": 140,
+      "height": 140,
       "background": "#eeeeee",
       "view": {"fill": "#f9f9f9"},
+      "config":{"legend":{"disable":"true"}},
       "encoding": {
         "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"},"scale":{"domain":[-10,10]} },
         "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"},"scale":{"domain":[-10,10]} },
@@ -770,6 +910,8 @@ option:hover{
 
 
     };}
+
+
     else{
       dataSpec= {"$schema": "https://vega.github.io/schema/vega-lite/v5.json",
       "description": "A simple scatter plot to display circle data.",
@@ -777,25 +919,24 @@ option:hover{
         "values": points,
       },
 
-      "mark": "point",
-      "title":"Current Dataset",
-      "width": 150,
-      "height": 150,
+      "mark": "circle",
+      "title":"Selected Dataset",
+      "width": 140,
+      "height": 140,
       "background": "#eeeeee",
       "view": {"fill": "#f9f9f9"},
       "encoding": {
         "x": { "field": "x", "type": "quantitative", "axis":{"title":"X-Value"},"scale":{"domain":[-10,10]} },
         "y": { "field": "y", "type": "quantitative", "axis":{"title":"Y-Value"},"scale":{"domain":[-10,10]} },
         "color": { "field": "label", "type":"quantitative", "title":"Value","scale": {
-        "domainMid": 0,
-        "range": "diverging"
+        "range": "ordinal"
       }},
 
         "tooltip": [{ "field": "label", "title":"Value" },{ "field": "x","title":"X-Value" }, { "field": "y","title":"Y-Value" }, ],    
       },}
     }
 
-    vegaEmbed("#dataplot", dataSpec, {renderer: "svg", actions:false});
+    vegaEmbed("#dataplot", dataSpec, {renderer: "svg", actions:true});
   }
 
   let trainingData = []
@@ -867,13 +1008,13 @@ convertdata()
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "A simple scatter plot to display circle data.",
         
-        "title": "Traing process",
+        "title": "Training process",
         "background": "#eeeeee",
       
         "vconcat": [{
           "view": {"fill": "#f9f9f9"},
-          "width": 150,
-          "height": 150,
+          "width": 140,
+          "height": 140,
           "data": {
             "values": acc,
           },
@@ -887,7 +1028,7 @@ convertdata()
               "color":{"field":"type", "type":"nominal",
                 "scale":{"range":["#33a02c","#1f78b4","#a6cee3","#b2df8a"],
                           "domain":["acc","val_acc","loss","val_loss"]},
-                "legend": {"labelExpr": "datum.label == 'acc' ? 'Accuricity' :datum.label == 'loss' ? 'Loss Value' :datum.label == 'val_acc' ? 'Validation Accuricity' : 'Loss Validation'"
+                "legend": {"labelExpr": "datum.label == 'acc' ? 'Accuracy' :datum.label == 'loss' ? 'Loss' :datum.label == 'val_acc' ? 'Validation Accuracy' : 'Loss Validation'"
             },
             "title":"Training Values",
           }
@@ -910,8 +1051,8 @@ convertdata()
               "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
               { "field": "acc", "type": "quantitative", "title": "Accuracy" },
               { "field": "val_acc", "type": "quantitative", "title": "Validation_Accuracy" },
-              { "field": "loss", "type": "quantitative", "title": "loss" },
-              { "field": "val_loss", "type": "quantitative", "title": "Validation_loss" }],
+              { "field": "loss", "type": "quantitative", "title": "Loss" },
+              { "field": "val_loss", "type": "quantitative", "title": "Validation_Loss" }],
               "opacity": {
                 "condition": { "value": 1, "param": "hover", "empty": false },
                 "value": 0.0
@@ -981,6 +1122,17 @@ async function showheatmap(id, input, firstLayer, secondLayer, classifier){
   plot_heat(id, data_weights)
 
 }
+
+function pushWeightsLayer1(firstLayer,epoch){
+  for (let i = 0; i< firstLayer.length; i++){
+    let neuronName = "Neuron "+i
+    let sum = 0
+    for (let j = 0; j < firstLayer[i].length; j++){
+      sum += Math.abs(firstLayer[i][j])
+    }
+    weights_layer1.push({epoch:epoch, neuron:neuronName, value:sum})
+  }
+}
 async function similarity(id, layers){
 function sort_dissimilarity_revers(d2array) {
   let minimum = d2array[0].length * 2;
@@ -1011,6 +1163,8 @@ function sort_dissimilarity_revers(d2array) {
   let scaled_minimum = Math.floor(10*(1-(minimum/d2outarraylen)))/10
   return [clothesthneighbour, reverse, scaled_minimum.toString()]
 }
+
+
 
 function scaleData(predata){
 //scale down to 1max
@@ -1055,11 +1209,11 @@ plot_similarity(id, similarity_array)
 
       let learningRate = [];
       let prevLayer = [await model.getWeights()[0].array(), await model.getWeights()[2].array(), await model.getWeights()[4].array()]
-
+      let weights_layer1 = []
       let networkID = document.getElementById("acc_val" + (network_index + 1));
     const startTime = Date.now();
       const h = await model.fit(trainingData, outputData, {
-        epochs: 10,
+        epochs: 52,
         //shuffle:true,
         validationSplit: 0.2,
         callbacks: [{
@@ -1068,6 +1222,7 @@ plot_similarity(id, similarity_array)
         let firstLayer = await model.getWeights()[2].array()
         let secondLayer = await model.getWeights()[4].array()
         if (classifier){
+          pushWeightsLayer1(firstLayer,epoch);
           acc.push({ epoch: epoch, value: logs.val_loss, type: "val_loss" });
         acc.push({ epoch: epoch, value: logs.loss, type: "loss" });
         acc.push({ epoch: epoch, value: logs.val_acc, type: "val_acc" });
@@ -1086,6 +1241,7 @@ plot_similarity(id, similarity_array)
         if (epoch%2==0){
         plot_training(network_index, acc)
         plot_lrd(network_index, learningRate)
+        plot_firstLayer(network_index, weights_layer1)
         }
         if (epoch%10 == 0){
           showheatmap(network_index, input, firstLayer, secondLayer, classifier)
@@ -1105,17 +1261,19 @@ plot_similarity(id, similarity_array)
       let timer_plot_start = performance.now()
       let networkID = document.getElementById("acc_val"+(id+1));
       let plot3
+
       if ($("#networktype").val() == "classification"){
       plot3 = {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
         "description": "Display of trainingsprocess.",
         "background": "#eeeeee",
-      
-        "title": "Traing process",
+        "config":{"legend":{"disable":"true"}},
+        "title": "Training process",
+        
         "vconcat": [{
           "view": {"fill": "#f9f9f9"},
-          "width": 150,
-          "height": 150,
+          "width": 140,
+          "height": 140,
           "data": {
             "values": acc,
           },
@@ -1129,10 +1287,11 @@ plot_similarity(id, similarity_array)
               "color":{"field":"type", "type":"nominal",
                 "scale":{"range":["#33a02c","#1f78b4","#a6cee3","#b2df8a"],
                           "domain":["acc","val_acc","loss","val_loss"]},
-                "legend": {"labelExpr": "datum.label == 'acc' ? 'Accuricity' :datum.label == 'loss' ? 'Loss Value' :datum.label == 'val_acc' ? 'Validation Accuricity' : 'Loss Validation'"
+                          "legend": {"labelExpr": "datum.label == 'acc' ? 'Accuracy' :datum.label == 'loss' ? 'Loss' :datum.label == 'val_acc' ? 'Validation Accuracy' : 'Loss Validation'"
             },
             "title":"Training Values",
           }
+
             }
           },
           {
@@ -1152,8 +1311,8 @@ plot_similarity(id, similarity_array)
               "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
               { "field": "acc", "type": "quantitative", "title": "Accuracy" },
               { "field": "val_acc", "type": "quantitative", "title": "Validation_Accuracy" },
-              { "field": "loss", "type": "quantitative", "title": "loss" },
-              { "field": "val_loss", "type": "quantitative", "title": "Validation_loss" }],
+              { "field": "loss", "type": "quantitative", "title": "Loss" },
+              { "field": "val_loss", "type": "quantitative", "title": "Validation_Loss" }],
               "opacity": {
                 "condition": { "value": 1, "param": "hover", "empty": false },
                 "value": 0.0
@@ -1171,11 +1330,11 @@ plot_similarity(id, similarity_array)
         "description": "A simple scatter plot to display circle data.",
         "background": "#eeeeee",
       
-        "title": "Traing process",
+        "title": "Training process",
         "vconcat": [{
           "view": {"fill": "#f9f9f9"},
-          "width": 150,
-          "height": 150,
+          "width": 140,
+          "height": 140,
           "data": {
             "values": acc,
           },
@@ -1185,12 +1344,12 @@ plot_similarity(id, similarity_array)
           "layer": [{
             "mark": "line",
             "encoding": {
-              "y": { "field": "value", "type": "quantitative", "title": "Value", "scale":{"domain":[0,0.5]}, },
+              "y": { "field": "value", "type": "quantitative", "title": "Value", "scale":{"domain":[0,0.7]}, },
               "color":{"field":"type", "type":"nominal",
                 "scale":{"range":["#33a02c","#1f78b4"],
                           "domain":["loss","val_loss"]},
-                "legend": {"labelExpr": "datum.label == 'loss' ? 'Loss Value' : 'Loss Validation'"
-            },
+                "legend": {"labelExpr": "datum.label == 'loss' ? 'Loss' : 'Loss Validation'"    
+              },
             "title":"Training Values",
           }
             }
@@ -1210,8 +1369,8 @@ plot_similarity(id, similarity_array)
             "mark": "rule",
             "encoding": {
               "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
-              { "field": "loss", "type": "quantitative", "title": "loss" },
-              { "field": "val_loss", "type": "quantitative", "title": "Validation_loss" }],
+              { "field": "loss", "type": "quantitative", "title": "Loss" },
+              { "field": "val_loss", "type": "quantitative", "title": "Validation_Loss" }],
               "opacity": {
                 "condition": { "value": 1, "param": "hover", "empty": false },
                 "value": 0.0
@@ -1222,8 +1381,10 @@ plot_similarity(id, similarity_array)
 
         ]
       }
-      }
-      vegaEmbed(networkID, plot3, {renderer: "svg", actions:false});
+      
+
+    }
+      vegaEmbed(networkID, plot3, {renderer: "svg", actions:true});
       timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
   //}
@@ -1238,10 +1399,10 @@ plot_similarity(id, similarity_array)
         "description": "Displaying the Weights of Nodes",
         "background": "#eeeeee",
       "view": {"fill": "#f9f9f9"},
-        "title": "Weights of Neurons",
+        "title": "Influence of a Neuron",
 
-          "width": 150,
-          "height": 150,
+          "width": 140,
+          "height": 140,
           "data": {
             "values": data_weights,
           },
@@ -1249,7 +1410,7 @@ plot_similarity(id, similarity_array)
             "x": { 
               "field": "layer", 
               "type": "ordinal",
-              "axis": { "title":"","labelAngle":40},
+              "axis": { "title":"","labelAngle":25},
               "sort":["Input Layer","First Layer","Second Layer","Output Layer"] },
             "y": { 
               "field": "yposition", 
@@ -1264,7 +1425,7 @@ plot_similarity(id, similarity_array)
             "size":{
               "field":"weight",
               "type":"quantitative",
-              "title":"Influence of Node"
+              "title":"Influence of a Neuron"
             },
             "tooltip":[
               {"field":"layer", "type":"ordinal", "title":"Layer"},
@@ -1275,7 +1436,7 @@ plot_similarity(id, similarity_array)
             "mark": "circle",
             "config": {"axis": {"grid": false}}
             }
-            vegaEmbed(networkIDheatmap, plotheatmap, {renderer: "svg", actions:false});
+            vegaEmbed(networkIDheatmap, plotheatmap, {renderer: "svg", actions:true});
             timer_plot += (performance.now()-timer_plot_start)/test_iterations
 
   }
@@ -1288,11 +1449,11 @@ plot_similarity(id, similarity_array)
         "description": "A simple scatter plot to display circle data.",
         "background": "#eeeeee",
         
-        "title": "Average Learning Rate Change per Layer",
+        "title": "Learning Rate Development per Layer",
         "vconcat": [{
           "view": {"fill": "#f9f9f9"},
-          "width": 150,
-          "height": 150,
+          "width": 140,
+          "height": 140,
           "data": {
             "values": lrd,
           },
@@ -1302,7 +1463,7 @@ plot_similarity(id, similarity_array)
           "layer": [{
             "mark": "line",
             "encoding": {
-              "y": { "field": "value", "type": "quantitative", "title": "Learning Rate", "scale":{"domain":[0,0.6]}, },
+              "y": { "field": "value", "type": "quantitative", "title": "Learning Rate", "scale":{"domain":[0,0.7]}, },
               "color":{"field":"type", "type":"nominal",
                 "scale":{"range":["#7570b3","#d95f02","#a6cee3","#1b9377"],
                           "domain":["input","hidden1","hidden2"]},
@@ -1328,8 +1489,8 @@ plot_similarity(id, similarity_array)
             "encoding": {
               "tooltip": [{ "field": "epoch", "type": "quantitative", "title": "Epoch" },
               { "field": "input", "type": "quantitative", "title": "Input Layer" },
-              { "field": "hidden1", "type": "quantitative", "title": "Hidden Layer 1" },
-              { "field": "hidden2", "type": "quantitative", "title": "Hidden Layer 2" },],
+              { "field": "hidden1", "type": "quantitative", "title": "First Layer" },
+              { "field": "hidden2", "type": "quantitative", "title": "Second Layer" },],
               "opacity": {
                 "condition": { "value": 1, "param": "hover", "empty": false },
                 "value": 0.0
@@ -1340,71 +1501,85 @@ plot_similarity(id, similarity_array)
 
         ]
       }
-      vegaEmbed(networkID, lrdplot, {renderer: "svg", actions:false});
+      vegaEmbed(networkID, lrdplot, {renderer: "svg", actions:true});
       timer_plot += (performance.now()-timer_plot_start)/test_iterations
     }
 
-    function plot_similarity(id, switched_signs){
+
+
+    function plot_firstLayer(id, firstLayer){
       let timer_plot_start = performance.now()
-      let networkID = document.getElementById("similarity_"+(id+1));
-      let similarity_chart= {
-        "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-          "data":{"values":switched_signs},
-          "mark": "bar",
-          "title":{
-            "text":"Pairwise Similarity in the same Layer",
-            "offset":8},
-          "width":150,
-          "height":150,
-          "background": "#eeeeee",
-      "view": {"fill": "#f9f9f9"},
-          "encoding": {
-            "x": {"field": "similarity", "title":"Similarity"},
-            "y": {"aggregate":"count", "type": "quantitative"},
-            "xOffset": {"field": "layerID"},
-            "color": {"field": "layerID", "title":"Layer",
-            "scale":{"range":["#7570b3","#d95f02","#a6cee3","#1b9377"],
-                          },
-            "legend":{"labelExpr": "datum.label == '0' ? 'Input Layer' :datum.label == '1' ? 'First Layer' : 'Second Layer'"
-          } }
-        }
-        }
-      
+      let networkID = document.getElementById("firstLayer_"+(id+1));
+      let num_first_layer_neuron = Number($("#input1_"+(id+1)).val());
+      let tooltips = [{ "field": "epoch", "type": "quantitative", "title": "Epoch" }]
+      for (let i = 0; i < num_first_layer_neuron; i++){
+        tooltips.push({"field":"Neuron "+i, "type":"quantitative","title":"Neuron "+i})
+      }
 
-        let similarity_chart2= {
+      let plorfirstLayer_chart= {
         "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-        "repeat": {"layer": ["0","1","2"]},
+        "description": "A simple scatter plot to display circle data.",
         "background": "#eeeeee",
-      "view": {"fill": "#f9f9f9"},
-        "spec": {
-          "mark": "bar",
+        
+        "title": "Weight Development in First Layer",
+          "view": {"fill": "#f9f9f9"},
+          "width": 140,
+          "height": 140,
+          "data": {
+            "values": firstLayer,
+          },  
           "encoding": {
-            "x": {
-              "field": "similarity",
-              "title": "Similarity",
-              "type": "nominal"
-            },
-            "y": {
-              "aggregate": "count",
-              "field": {"repeat": "layer"},
-              "title": "Sim in Percentage"
-            },
-            "color": {"datum": {"repeat": "layer"}, "title": "Layer"},
-            "xOffset": {"datum": {"repeat": "layer"}}
+            "x": { "field": "epoch", "type": "quantitative", "title": "Epoch" },
+          },
+          "layer":[{
+            "mark": "line",
+            "encoding":{
+            "y": { "field": "value", "type": "quantitative", "title": "Weight of Neuron", },
+              "color":{"field":"neuron", "type":"nominal", "title": "Neuron"
+              }}},
+              {
+            "params": [{
+              "name": "hover",
+              "select": {
+                "type": "point",
+                "fields": ["epoch"],
+                "nearest": true,
+                "on": "pointermove",
+                "clear": "pointerout"
+              }
+            }],
+            "transform": [{ "pivot": "neuron", "value": "value", "groupby": ["epoch"] }],
+            "mark": "rule",
+            "encoding": {
+              "tooltip": tooltips,
+              "opacity": {
+                "condition": { "value": 1, "param": "hover", "empty": false },
+                "value": 0.0
+              }
+            }
           }
-        },
-        "config": {
-          "mark": {"invalid": null}
-        }}
+            
+            ]
+            
+          
 
-      vegaEmbed(networkID, similarity_chart, {renderer: "svg", actions:false});
+      }
+
+      vegaEmbed(networkID, plorfirstLayer_chart, {renderer: "svg", actions:true});
       timer_plot += (performance.now()-timer_plot_start)/test_iterations
+    }
+
+    function add_tooltips(id, tooltip_array){
+      for (let i in tooltip_array){
+      //$("#networkinfotext"+ (id+1)+i).text(tooltip_array[i])
+      document.getElementById("networkinfotext"+ (id+1)+i).innerHTML =tooltip_array[i]
+      }
     }
 
     function training_done(){
       trainingCounterDone++
       if (document.getElementById("graph_section").childElementCount-1 == trainingCounterDone){
-      document.getElementById("trainingOnData").innerText = "The training was finished.";
+      document.getElementById("trainingOnData").innerText = "The training has finished.";
       trainingCounterDone = 0
       currentlytraining = false
       }
@@ -1431,23 +1606,31 @@ plot_similarity(id, similarity_array)
       for (let i = 0; i<4; i++){
         const worker = await new Worker("worker.js");
         worker.addEventListener("message", function handleMessageFromWorker(msg){
-          if (msg.data[1] == "acc"){
+          switch(msg.data[1]){
+          case "acc":
               plot_training(msg.data[0], msg.data[2]);
-
-          }
-          else if (msg.data[1] == "heatmap"){
+              break;
+          
+          case "heatmap":
               plot_heat(msg.data[0], msg.data[2]);
               heap()
-          }
-          else if (msg.data[1] == "lrd"){
-              plot_lrd(msg.data[0], msg.data[2]);
-          }
-          else if (msg.data[1]=="similarity"){
-            plot_similarity(msg.data[0], msg.data[2])
+              break;
 
-          }
-          else if (msg.data[1]=="measurments"){
-            console.log(msg.data[2])
+          case "lrd":
+              plot_lrd(msg.data[0], msg.data[2]);
+              break;
+          
+          case "similarity":
+            plot_similarity(msg.data[0], msg.data[2])
+            break;
+          case "firstLayer":
+            plot_firstLayer(msg.data[0], msg.data[2])
+            break;
+
+          case "tooltip":
+            add_tooltips(msg.data[0], msg.data[2])  
+
+          case "measurments":
             time_copy += msg.data[2][0]/test_iterations
             timer_send_end += msg.data[2][1]/test_iterations
             time_workerinitNetworkend+= msg.data[2][2]/test_iterations
@@ -1456,15 +1639,16 @@ plot_similarity(id, similarity_array)
             timer_showheatmap_end+= msg.data[2][5]/test_iterations
             timer_similarity_end+= msg.data[2][6]/test_iterations
             timer_network+= msg.data[2][7]/test_iterations
+            break;
 
-          }
-          else if (msg.data[1]=="done"){
+          case "done":
             if (tests_aktiv){
               training_done2_test()
             }
             else{
             training_done()
           }
+          break;
         }
       })
         workerlist.push(worker)
@@ -1506,9 +1690,8 @@ async function startTraining2_test(firstValueNeurons, secondValueNeurons, num_ne
       if (workerlist.length == 0){workerlist = await initWorker(num_net)}
     timeInitWorker_End = performance.now()-timeInitWorker_start
     //push(timeInitWorker_End)
-    start = Date.now()
     for (let j = 0; j < num_net; j++) {
-      workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points, classifier:classifier, start:start})     
+      workerlist[j].postMessage({id:j, firstLayer:firstValueNeurons[j], secondLayer:secondValueNeurons[j], sameWeights:sameWeights, data:points, classifier:classifier})     
     }
   }
 
@@ -1519,7 +1702,7 @@ async function training_done2_test(){
       uJSHS = window.performance.memory.usedJSHeapSize;
       let end = performance.now();
       memoryUsage.push(uJSHS);
-      testtime.push(end-start);
+      testtime = end-start;
       testarray[case_num] += 1;
       let [firstValueNeurons, secondValueNeurons, num_net] = await changeInputClassification(testarray)
       
@@ -1529,7 +1712,7 @@ async function training_done2_test(){
     else {
       startTraining2_test(firstValueNeurons, secondValueNeurons, num_net)
     }
-    }
+  }
   }
 
 function heap(){
@@ -1542,7 +1725,7 @@ function heap(){
 }
 function resetValues(){  
 
-  testtime=[]
+  testtime=0
   memoryUsage=[]
   timeInitWorker=[]
   timeInitNetwork = []
@@ -1562,7 +1745,7 @@ function resetValues(){
 
 
 
-let test_case = 2;
+let test_case = 0;
 let parallel = false;
 async function getTestResults() {
   tests_aktiv = true;
@@ -1575,19 +1758,19 @@ async function getTestResults() {
   classifier = true
   getTestResultsRec(array = [0,0,0,0])}
 
-  if (test_case==1){
-  testrunname = "Regression_SingleThread"
-  classifier = false
-  selectData("regplain")
-  convertdata()
-  getTestResultsRec(array = [0,0,0,0])}
+  //if (test_case==1){
+  //testrunname = "Regression_SingleThread"
+  //classifier = false
+ // selectData("regplain")
+  //convertdata()
+  //getTestResultsRec(array = [0,0,0,0])}
 
-  if (test_case==2){
-  parallel = true
-  selectData("circle_dataset")
-  testrunname = "Classification_MultiThread"
-  classifier = true
-  startTraining2_test([2], [2], 1)}
+  //if (test_case==2){
+  //parallel = true
+  //selectData("circle_dataset")
+  //testrunname = "Classification_MultiThread"
+  //classifier = true
+  //startTraining2_test([2], [2], 1)}
 
   //if (test_case==3){
   //  parallel = true
@@ -1604,10 +1787,12 @@ async function getTestResults() {
       return [firstValueNeurons, secondValueNeurons,1]
   }
   if (testarray[0]==test_iterations){
+    console.log(testtime/test_iterations)
     case_num++
     testarray[0]++
     store_eval(0)
     
+    testtime = 0
   }
 
   if(testarray[1]<test_iterations){
@@ -1615,9 +1800,12 @@ async function getTestResults() {
     return [firstValueNeurons, secondValueNeurons,1]
   }
   if (testarray[1]==test_iterations){
+    console.log(testtime/test_iterations)
     store_eval(1)
     case_num++
     testarray[1]++
+    
+    testtime = 0
   addNetwork();
   addNetwork();
   addNetwork();
@@ -1629,7 +1817,10 @@ async function getTestResults() {
     return [firstValueNeurons, secondValueNeurons,4]
   }
   if (testarray[2]==test_iterations){
+    console.log(testtime/test_iterations)
     store_eval(2)
+    
+    testtime = 0
     case_num++
     testarray[2]++}
 
@@ -1637,7 +1828,7 @@ async function getTestResults() {
     let [firstValueNeurons, secondValueNeurons] = [[8,8,8,8], [8,8,8,8]];
     return [firstValueNeurons, secondValueNeurons,4]
   }
-  
+  console.log(testtime/test_iterations)
   store_eval(3)
   test_case++
 getTestResults(test_case)
@@ -1672,7 +1863,8 @@ getTestResults(test_case)
       //push("time":,"ram":, "case_number:")
       //memoryUsage.push({"ram":uJSHS, "time":end-start,"case_number":case_num});
       memoryUsage.push(uJSHS);
-      testtime.push(end-start);
+      testtime += end-start;
+
       //push.
       testarray[case_num] += 1;
       getTestResultsRec(testarray)
@@ -1704,9 +1896,9 @@ let result_storage =
   timer_plot,
   max_heap,
   average_heap,
+  testtime,
   ]
   let storage_name = String(test_case) + String(neuronNum)
-  console.log(storage_name)
 localStorage.setItem(storage_name, JSON.stringify(result_storage));
 resetValues()
 //jsheap: sum(every 10/5)
@@ -1716,6 +1908,10 @@ resetValues()
 function showTestResults(){
   //console.log(JSON.parse(localStorage.getItem("testtime")))
   //console.log("memoryUsage "+JSON.parse(localStorage.getItem("memoryUsage")))
+  
+  console.log("20: "+JSON.parse(localStorage.getItem(20)))
+  console.log("21: "+JSON.parse(localStorage.getItem(21)))
+  console.log("22: "+JSON.parse(localStorage.getItem(22)))
   console.log("23: "+JSON.parse(localStorage.getItem(23)))
 //Regression_SingleThread_Time
 //Regression_SingleThread_memoryUsage
