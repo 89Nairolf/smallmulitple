@@ -2,7 +2,7 @@
 importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs");
 var model;
 
-let epochs = 31
+let epochs = 51
 
 let weights_layer1 = [];
 let weights_layer1_array = [];
